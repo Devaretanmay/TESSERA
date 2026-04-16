@@ -150,7 +150,7 @@ edges:
 ## Install
 
 ```bash
-pip install tessera-ai
+pip install tessera-security
 ```
 
 Or for development:
