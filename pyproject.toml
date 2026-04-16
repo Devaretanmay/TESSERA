@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "tessera-security"
-version = "1.0.2"
+version = "1.0.3"
 description = "Temporal, Emergent, Swarm-based Security & Evaluation for Resilience of AI"
 readme = "README.md"
 requires-python = ">=3.11"

@@ -220,6 +220,83 @@ class AnthropicAdapter:
         pass
 
 
+@dataclass
+class GroqAdapter:
+    model: str = "llama-3.3-70b-versatile"
+    api_key: str | None = None
+    base_url: str = "https://api.groq.com/openai/v1"
+    temperature: float = 0.7
+    _client = None
+
+    def __post_init__(self):
+        self.api_key = self.api_key or os.environ.get("GROQ_API_KEY")
+
+    async def generate(self, prompt: str, **kwargs) -> str:
+        try:
+            import httpx
+
+            headers = {"Authorization": f"Bearer {self.api_key}"}
+            async with httpx.AsyncClient() as client:
+                resp = await client.post(
+                    f"{self.base_url}/chat/completions",
+                    json={
+                        "model": self.model,
+                        "messages": [{"role": "user", "content": prompt}],
+                        "temperature": kwargs.get("temperature", self.temperature),
+                    },
+                    headers=headers,
+                    timeout=60.0,
+                )
+                resp.raise_for_status()
+                return resp.json().get("choices", [{}])[0].get("message", {}).get("content", "")
+        except Exception as e:
+            return f"[Groq unavailable: {e}]"
+
+    async def generate_with_context(self, prompt: str, context: list[dict], **kwargs) -> str:
+        messages = [{"role": m["role"], "content": m["content"]} for m in context]
+        messages.append({"role": "user", "content": prompt})
+
+        try:
+            import httpx
+
+            headers = {"Authorization": f"Bearer {self.api_key}"}
+            async with httpx.AsyncClient() as client:
+                resp = await client.post(
+                    f"{self.base_url}/chat/completions",
+                    json={
+                        "model": self.model,
+                        "messages": messages,
+                        "temperature": kwargs.get("temperature", self.temperature),
+                    },
+                    headers=headers,
+                    timeout=60.0,
+                )
+                resp.raise_for_status()
+                return resp.json().get("choices", [{}])[0].get("message", {}).get("content", "")
+        except Exception as e:
+            return f"[Groq unavailable: {e}]"
+
+    def get_cost_estimate(self, prompt: str) -> float:
+        tokens = len(prompt) // 4
+        pricing = {
+            "llama-3.3-70b-versatile": 0.0002,
+            "llama-3.1-70b-versatile": 0.0002,
+            "llama-3.1-8b-instant": 0.00004,
+        }
+        rate = pricing.get(self.model, 0.0001)
+        return tokens * rate
+
+    def get_model_name(self) -> str:
+        return self.model
+
+    @property
+    def supports_streaming(self) -> bool:
+        return True
+
+    async def close(self) -> None:
+        pass
+
+
 def create_backbone(provider: str = "ollama", **kwargs) -> BackboneAdapter | None:
     if provider == "ollama":
         return OllamaAdapter(**kwargs)
@@ -227,4 +304,6 @@ def create_backbone(provider: str = "ollama", **kwargs) -> BackboneAdapter | Non
         return OpenAIAdapter(**kwargs)
     elif provider == "anthropic":
         return AnthropicAdapter(**kwargs)
+    elif provider == "groq":
+        return GroqAdapter(**kwargs)
     return None
