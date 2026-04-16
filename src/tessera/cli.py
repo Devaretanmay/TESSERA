@@ -500,14 +500,7 @@ def siem(
     typer.echo(f"✓ SIEM export: {result['success']} sent, {result['failed']} failed")
 
 
-@app.command()
-def gnn(
-    action: str = typer.Argument(..., help="Action: train, predict, info"),
-    topology_file: str = typer.Option(None, help="Topology file for prediction"),
-    epochs: int = typer.Option(100, help="Training epochs"),
-    label: int = typer.Option(0, help="Label for training (0=safe, 1=atomic, 2=chain, 3=exfil)"),
-):
-    from tessera.classifier.gnn.pipeline import create_pipeline
+def _build_graph(topo):
     from tessera.classifier.gnn.data import (
         TopologyGraph,
         NodeType,
@@ -516,118 +509,89 @@ def gnn(
         GraphNode,
         GraphEdge,
     )
-    import yaml
 
+    graph = TopologyGraph()
+    for node_data in topo.get("nodes", []):
+        graph.add_node(
+            GraphNode(
+                node_data.get("id", "unknown"),
+                NodeType(node_data.get("type", "llm")),
+                TrustLevel(node_data.get("trust_boundary", "trusted")),
+            )
+        )
+    for edge in topo.get("edges", []):
+        graph.add_edge(
+            GraphEdge(
+                edge.get("from", "unknown"),
+                edge.get("to", "unknown"),
+                EdgeType(edge.get("flow", "prompt")),
+                TrustLevel(edge.get("trust_level", "trusted")),
+            )
+        )
+    return graph
+
+
+@app.command()
+def gnn(
+    action: str = typer.Argument(..., help="Action: train, predict, info"),
+    topology_file: str = typer.Option(None, help="Topology file for prediction"),
+    epochs: int = typer.Option(100, help="Training epochs"),
+    label: int = typer.Option(0, help="Label for training (0=safe, 1=atomic, 2=chain, 3=exfil)"),
+):
     if action == "info":
         typer.echo("GNN Classifier:")
-        typer.echo("  - GraphSAGE-inspired architecture")
-        typer.echo("  - Node type + trust level features")
         typer.echo(
-            "  - 4-class classification: safe, atomic_injection, chain_exploitation, exfiltration"
+            "  GraphSAGE architecture, 4-class: safe, atomic_injection, chain_exploitation, exfiltration"
         )
-        typer.echo("  - Run 'tessera gnn train' to train on swarm data")
+        typer.echo("  Run 'tessera gnn train' to train")
         return
+
+    if not topology_file:
+        typer.echo("--topology-file required", err=True)
+        return
+
+    import yaml
+
+    with open(topology_file) as f:
+        topo = yaml.safe_load(f)
+
+    from tessera.classifier.gnn.pipeline import create_pipeline
+
+    pipeline = create_pipeline()
+    graph = _build_graph(topo)
 
     if action == "train":
-        if not topology_file:
-            typer.echo("--topology-file required for train", err=True)
-            return
-
-        typer.echo(f"Training GNN on {topology_file}...")
-        with open(topology_file) as f:
-            topo = yaml.safe_load(f)
-
-        pipeline = create_pipeline()
-        graph = TopologyGraph()
-
-        for node_data in topo.get("nodes", []):
-            node_id = node_data.get("id", "unknown")
-            node_type = NodeType(node_data.get("type", "llm"))
-            trust = TrustLevel(node_data.get("trust_boundary", "trusted"))
-            graph.add_node(GraphNode(node_id, node_type, trust))
-
-        for edge in topo.get("edges", []):
-            graph.add_edge(
-                GraphEdge(
-                    from_node=edge.get("from", "unknown"),
-                    to_node=edge.get("to", "unknown"),
-                    edge_type=EdgeType(edge.get("flow", "prompt")),
-                    trust=TrustLevel(edge.get("trust_level", "trusted")),
-                )
-            )
-
         from tessera.classifier.gnn.pipeline import TrainingSample
 
-        sample = TrainingSample(graph=graph, label=label)
-        pipeline.add_sample(sample)
+        pipeline.add_sample(TrainingSample(graph=graph, label=label))
         result = pipeline.train(epochs=epochs)
+        typer.echo(
+            f"Training complete: {result.get('final_loss', 0.0):.4f} loss, {result.get('samples_trained', 0)} samples"
+        )
 
-        typer.echo(f"✓ Training complete: {result.get('final_loss', 0.0):.4f} loss")
-        typer.echo(f"  Samples: {result.get('samples_trained', 0)}")
-        return
-
-    if action == "predict":
-        if not topology_file:
-            typer.echo("--topology-file required for predict", err=True)
-            return
-
-        with open(topology_file) as f:
-            topo = yaml.safe_load(f)
-
-        pipeline = create_pipeline()
-        graph = TopologyGraph()
-
-        for node_data in topo.get("nodes", []):
-            node_id = node_data.get("id", "unknown")
-            node_type = NodeType(node_data.get("type", "llm"))
-            trust = TrustLevel(node_data.get("trust_boundary", "trusted"))
-            graph.add_node(GraphNode(node_id, node_type, trust))
-
-        for edge in topo.get("edges", []):
-            graph.add_edge(
-                GraphEdge(
-                    from_node=edge.get("from", "unknown"),
-                    to_node=edge.get("to", "unknown"),
-                    edge_type=EdgeType(edge.get("flow", "prompt")),
-                    trust=TrustLevel(edge.get("trust_level", "trusted")),
-                )
-            )
-
+    elif action == "predict":
         result = pipeline.predict(graph)
-        typer.echo("Predictions:")
         for pred in result["predictions"]:
-            typer.echo(f"  {pred['class']} (confidence: {pred['confidence']:.2f})")
-        return
+            typer.echo(f"  {pred['class']} ({pred['confidence']:.2f})")
 
-    if action == "train-synthetic":
+    elif action == "train-synthetic":
         from tessera.classifier.gnn.training_data import create_training_dataset
-        from tessera.classifier.gnn.pipeline import create_pipeline, TrainingSample
 
-        typer.echo("Generating synthetic training data...")
+        typer.echo("Generating synthetic data...")
         train_samples, test_samples = create_training_dataset()
-
-        typer.echo(f"Training on {len(train_samples)} synthetic samples...")
-        pipeline = create_pipeline()
-
         for s in train_samples:
             pipeline.add_sample(graph=s["graph"], label=s["label"])
-
         result = pipeline.train(epochs=epochs)
+        typer.echo(f"Training complete: {result.get('final_loss', 0.0):.4f} loss")
+        correct = sum(
+            1
+            for s in test_samples
+            if pipeline.predict(s["graph"])["predictions"][0]["class_index"] == s["label"]
+        )
+        typer.echo(f"  Accuracy: {correct / len(test_samples) * 100:.1f}%")
 
-        typer.echo(f"✓ Training complete: {result.get('final_loss', 0.0):.4f} loss")
-
-        # Evaluate on test set
-        correct = 0
-        for s in test_samples:
-            pred = pipeline.predict(s["graph"])
-            if pred["predictions"][0]["class_index"] == s["label"]:
-                correct += 1
-
-        accuracy = correct / len(test_samples) * 100 if test_samples else 0
-        typer.echo(f"  Test accuracy: {accuracy:.1f}%")
-        return
-
-    typer.echo("gnn actions: train, train-synthetic, predict, info")
+    else:
+        typer.echo("Actions: train, predict, train-synthetic, info")
 
 
 @app.command()
