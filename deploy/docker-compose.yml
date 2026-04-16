@@ -1,0 +1,66 @@
+version: "3.8"
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgres://tessera:tessera@postgres:5432/tessera
+      - REDIS_URL=redis://redis:6379
+      - API_KEY=tessera-dev-key
+      - LOG_LEVEL=debug
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - ./data:/data
+    command: ["python", "-m", "tessera.api.server"]
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - DATABASE_URL=postgres://tessera:tessera@postgres:5432/tessera
+      - REDIS_URL=redis://redis:6379
+      - API_KEY=tessera-dev-key
+    depends_on:
+      - postgres
+      - redis
+      - api
+    deploy:
+      replicas: 2
+
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=tessera
+      - POSTGRES_PASSWORD=tessera
+      - POSTGRES_DB=tessera
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  swagger:
+    image: swaggerapi/swagger-ui
+    ports:
+      - "8080:8080"
+    environment:
+      - SWAGGER_JSON=/openapi.json
+    volumes:
+      - ./docs/openapi.json:/openapi.json
+
+volumes:
+  postgres_data:
+  redis_data:

@@ -1,0 +1,48 @@
+system: "customer_support_agent"
+version: "1.0"
+
+nodes:
+  - id: intake_llm
+    type: model
+    provider: openai
+    model: gpt-4o
+    trust_boundary: user_controlled
+    config:
+      temperature: 0.3
+      max_tokens: 2048
+
+  - id: product_rag
+    type: rag_corpus
+    backend: pinecone
+    index: customer-support-kb
+    trust_boundary: partially_trusted
+
+  - id: crm_tool
+    type: tool
+    schema_url: https://internal.tools/crm.json
+    trust_boundary: internal_trusted
+    capabilities:
+      - read_customer
+      - update_ticket
+
+  - id: memory_store
+    type: memory
+    backend: redis
+    ttl: 3600
+    trust_boundary: internal_trusted
+
+edges:
+  - from: intake_llm
+    to: product_rag
+    flow: retrieval
+    trust_level: untrusted
+
+  - from: intake_llm
+    to: crm_tool
+    flow: tool_call
+    trust_level: internal
+
+  - from: intake_llm
+    to: memory_store
+    flow: read_write
+    trust_level: internal

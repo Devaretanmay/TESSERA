@@ -1,0 +1,281 @@
+Metadata-Version: 2.4
+Name: tessera-ai
+Version: 1.0.0
+Summary: Temporal, Emergent, Swarm-based Security & Evaluation for Resilience of AI
+Author: TESSERA Team
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Developers
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Topic :: Security
+Requires-Python: >=3.11
+Description-Content-Type: text/markdown
+Requires-Dist: pydantic>=2.5.0
+Requires-Dist: typer>=0.12.0
+Requires-Dist: pyyaml>=6.0
+Requires-Dist: numpy>=1.24.0
+Provides-Extra: dev
+Requires-Dist: pytest>=8.0.0; extra == "dev"
+Requires-Dist: pytest-asyncio>=0.23.0; extra == "dev"
+Requires-Dist: ruff>=0.1.0; extra == "dev"
+Provides-Extra: api
+Requires-Dist: fastapi>=0.109.0; extra == "api"
+Requires-Dist: uvicorn>=0.27.0; extra == "api"
+Requires-Dist: httpx>=0.26.0; extra == "api"
+Provides-Extra: llm
+Requires-Dist: openai>=1.12.0; extra == "llm"
+Requires-Dist: anthropic>=0.18.0; extra == "llm"
+Provides-Extra: ml
+Requires-Dist: torch>=2.2.0; extra == "ml"
+Requires-Dist: sentence-transformers>=2.4.0; extra == "ml"
+
+# TESSERA - AI Security Testing Platform
+
+**Version:** 1.0.0  
+**Date:** April 2026
+
+---
+
+## The Invariant: What Makes TESSERA Different
+
+TESSERA catches attacks that per-hop scanners miss. Here's the proof:
+
+```python
+from tessera.classifier.rule_based import ChainDetector
+
+detector = ChainDetector()
+
+# Each hop individually scores below 0.5 (would NOT trigger alone)
+per_hop_scores = [0.35, 0.40]
+
+# But together they form a compound chain:
+# Hop 1: instruction_override (RAG injection)
+# Hop 2: tool_parameter_manipulation (tool misuse)
+per_hop_indicators = [
+    ["instruction_override"],
+    ["tool_parameter_manipulation"],
+]
+
+is_compound, pattern, confidence, cfpe_id = detector.detect_chain(
+    ["rag_corpus", "tool"],
+    per_hop_scores,
+    per_hop_indicators,
+)
+
+print(f"Chain detected: {is_compound}")  # True
+print(f"Pattern: {pattern}")               # rag_to_tool
+print(f"Confidence: {confidence}")        # 0.51
+print(f"CFPE ID: {cfpe_id}")             # CFPE-0001
+```
+
+**This is the product.** Atomic scanners check each hop in isolation and see nothing suspicious. TESSERA sees the chain.
+
+---
+
+## Install
+
+```bash
+pip install tessera-ai
+```
+
+Or for development:
+
+```bash
+git clone https://github.com/your-repo/tessera.git
+cd tessera
+pip install -e .
+```
+
+---
+
+## Quick Start
+
+```bash
+# Validate topology
+tessera topology --config examples/customer_support_agent.yaml --validate
+
+# Run scan (Tier 1 - fast gate, <30s)
+tessera scan --config examples/customer_support_agent.yaml --tier 1
+
+# Run Tier 2 (full scan, <5min)
+tessera scan --config examples/customer_support_agent.yaml --tier 2
+
+# Run with real target
+tessera scan --config topology.yaml --target-provider openai --target-model gpt-4
+
+# Run swarm probes
+tessera swarm --topology-file topology.yaml --iterations 10
+
+# Detect behavioral drift
+tessera fingerprint --calibrate baseline_queries.txt
+tessera fingerprint --detect new_responses.txt --baseline baseline.json
+```
+
+---
+
+## Why This Matters
+
+Existing tools (garak, PyRIT, DeepTeam) are atomic probe scanners. They test each hop in isolation:
+
+- garak: Single model endpoint, no graph concept
+- PyRIT: Single target, no multi-hop modeling
+- DeepTeam: Single model, no topology awareness
+
+**The attacks that matter most are compound.** A RAG injection that passes through to tool misuse. Memory poisoning that propagates to model behavior. These are invisible to atomic scanners.
+
+TESSERA sees the graph. It catches the chains.
+
+---
+
+## Core Concepts
+
+### Topology
+Define AI system as graph:
+
+```yaml
+system: "my_chatbot"
+version: "1.0"
+
+nodes:
+  - id: user_input
+    type: user_input
+    trust_boundary: user_controlled
+  
+  - id: llm
+    type: model
+    provider: openai
+    model: gpt-4o
+    trust_boundary: trusted
+  
+  - id: knowledge_base
+    type: rag_corpus
+    trust_boundary: partially_trusted
+
+edges:
+  - from: user_input
+    to: llm
+    flow: api
+    trust_level: user_controlled
+    
+  - from: llm
+    to: knowledge_base
+    flow: retrieval
+    trust_level: untrusted
+```
+
+### Trust Boundaries
+- `user_controlled` - User input, untrusted
+- `partially_trusted` - RAG, external data
+- `internal_trusted` - Tools, internal APIs
+- `trusted` - LLMs, outputs
+
+---
+
+## Scan Tiers
+
+| Tier | Purpose | Time | Use Case |
+|------|---------|------|----------|
+| 1 | Fast gate | <30s | Pre-commit, CI/CD |
+| 2 | Full scan | <5min | Pre-deploy |
+| 3 | Complete | <60min | Nightly audit |
+
+---
+
+## CLI Commands
+
+### scan
+```bash
+tessera scan --config topology.yaml --tier 1 --target-provider ollama
+```
+
+Options:
+- `--config` - Topology YAML (required)
+- `--tier` - 1, 2, or 3
+- `--target-provider` - ollama, openai, anthropic
+- `--target-url` - API URL
+- `--target-model` - Model name
+
+### topology
+```bash
+tessera topology --config topology.yaml --validate --visualize
+```
+
+### discovers
+Auto-discover from OpenAPI:
+```bash
+tessera discover --source api_spec.yaml --output topology.yaml
+```
+
+### swarm
+Run cooperative agent probes:
+```bash
+tessera swarm --topology-file topology.yaml --iterations 10 --backbone openai
+```
+
+### fingerprint
+Detect behavioral drift:
+```bash
+tessera fingerprint --calibrate queries.txt
+tessera fingerprint --detect responses.txt --baseline baseline.json --webhook http://.../alert
+```
+
+### findings
+```bash
+tessera findings --format sarif --output results.sarif
+```
+
+### probes
+```bash
+tessera probes --list-all
+```
+
+### gnn
+```bash
+# Train on synthetic data
+tessera gnn train-synthetic --epochs 100
+```
+
+---
+
+## Findings Format
+
+```json
+{
+  "finding_id": "uuid",
+  "severity": "critical",
+  "failure_type": "compound_chain",
+  "topology_path": ["rag_corpus", "tool"],
+  "confidence": 0.85,
+  "cfpe_id": "CFPE-0001",
+  "remediation": {
+    "action": "Implement multi-hop validation"
+  }
+}
+```
+
+---
+
+## Architecture
+
+```
+[Topology] --> [ScanExecutor] --> [Classifier] --> [Findings]
+                      |
+                      v
+                 [Swarm]
+                      |
+                      v
+                [Fingerprint] --> [Drift Detection]
+```
+
+---
+
+## Requirements
+
+- Python 3.11+
+- sentence-transformers (for embedding classifier)
+- For real targets: OpenAI API key, Ollama, or Anthropic
+
+---
+
+## License
+
+MIT

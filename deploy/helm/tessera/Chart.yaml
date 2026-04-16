@@ -1,0 +1,67 @@
+apiVersion: v2
+name: tessera
+description: TESSERA - AI Security Testing Platform
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+
+dependencies:
+  - name: postgresql
+    version: 12.x.x
+    repository: https://charts.bitnami.com/bitnami
+    condition: postgresql.enabled
+  - name: redis
+    version: 17.x.x
+    repository: https://charts.bitnami.com/bitnami
+    condition: redis.enabled
+
+values:
+  replicaCount: 2
+  
+  image:
+    repository: tessera
+    tag: latest
+    pullPolicy: IfNotPresent
+  
+  service:
+    type: ClusterIP
+    port: 80
+  
+  ingress:
+    enabled: true
+    className: nginx
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-prod
+    hosts:
+      - host: tessera.example.com
+        paths:
+          - path: /
+            pathType: Prefix
+    tls:
+      - secretName: tessera-tls
+        hosts:
+          - tessera.example.com
+  
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+  
+  persistence:
+    enabled: true
+    size: 10Gi
+  
+  postgresql:
+    enabled: true
+    auth:
+      username: tessera
+      password: change-me
+      database: tessera
+  
+  redis:
+    enabled: true
+    auth:
+      password: change-me
