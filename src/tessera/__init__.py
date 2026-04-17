@@ -1,19 +1,18 @@
-# TESSERA - Temporal, Emergent, Swarm-based Security & Evaluation for Resilience of AI
-
+# TESSERA Core Package
 __version__ = "0.1.0"
-__author__ = "TESSERA Team"
 
-from tessera.topology.models import TopologyNode, TopologyEdge, TopologyGraph
-from tessera.probes.models import Probe, AttackPrimitive
-from tessera.findings.models import Finding, FindingSeverity, FailureType
+from tessera.core.topology.models import Graph, Node, Edge, TrustBoundary, DataFlow
+from tessera.core.findings.models import Finding, FindingSeverity, FailureType
+from tessera.core.detection.patterns import detect
 
 __all__ = [
-    "TopologyNode",
-    "TopologyEdge",
-    "TopologyGraph",
-    "Probe",
-    "AttackPrimitive",
+    "Graph",
+    "Node",
+    "Edge",
+    "TrustBoundary",
+    "DataFlow",
     "Finding",
     "FindingSeverity",
     "FailureType",
+    "detect",
 ]
