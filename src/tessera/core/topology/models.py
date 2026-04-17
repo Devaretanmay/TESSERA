@@ -1,15 +1,9 @@
 """
 Core topology models - single source of truth for graph representation.
-
-STRICT SCHEMA:
-- All graph components use these models only
-- No alternate formats, no implicit tuples
-- Failure if data is missing rather than fallback
 """
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Literal
 
 
 class TrustBoundary(str, Enum):
@@ -22,7 +16,6 @@ class TrustBoundary(str, Enum):
 
     @classmethod
     def _missing_(cls, value: str):
-        # Map unknown values to closest equivalent
         mapping = {
             "internal_trusted": cls.INTERNAL,
             "partially_trusted": cls.PARTIALLY_TRUSTED,
@@ -41,13 +34,11 @@ class DataFlow(str, Enum):
 
     @classmethod
     def _missing_(cls, value: str):
-        return cls.API  # Default for unknown
+        return cls.API
 
 
 @dataclass(frozen=True)
 class Edge:
-    """Single-edge schema - no alternatives allowed."""
-
     from_node: str
     to_node: str
     trust_boundary: TrustBoundary
@@ -62,8 +53,6 @@ class Edge:
 
 @dataclass(frozen=True)
 class Node:
-    """Single-node schema."""
-
     id: str
     type: str
     provider: str | None = None
@@ -73,8 +62,6 @@ class Node:
 
 @dataclass
 class Graph:
-    """Immutable graph container."""
-
     system: str
     version: str = "1.0"
     nodes: dict[str, Node] = field(default_factory=dict)
@@ -93,7 +80,6 @@ class Graph:
         return [e for e in self.edges if e.to_node == node_id]
 
     def trust_crossing_edges(self) -> list[tuple[Edge, str, str]]:
-        """Edges that cross trust boundaries."""
         crossings = []
         for edge in self.edges:
             from_nb = self.nodes.get(edge.from_node)
@@ -103,5 +89,4 @@ class Graph:
         return crossings
 
     def attack_surface(self) -> list[Edge]:
-        """Edges with untrusted boundaries."""
         return [e for e in self.edges if e.trust_boundary == TrustBoundary.EXTERNAL]

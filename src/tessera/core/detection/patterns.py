@@ -1,7 +1,5 @@
 """
-Detection patterns for AI/Agent security vulnerabilities.
-
-CFPE patterns - deterministic rules, no randomness.
+CFPE Detection patterns.
 """
 
 from dataclasses import dataclass
@@ -26,8 +24,6 @@ class Category(str, Enum):
 
 @dataclass
 class Finding:
-    """Immutable finding."""
-
     id: str
     severity: Severity
     category: Category
@@ -37,8 +33,6 @@ class Finding:
 
 
 class DetectionRule:
-    """Base rule."""
-
     id: str
     name: str
     applies_to: set[str]
@@ -48,8 +42,6 @@ class DetectionRule:
 
 
 class CFPE0001Rule(DetectionRule):
-    """RAG → Tool execution chain."""
-
     id = "CFPE-0001"
     name = "RAG to Tool"
     applies_to = {"llm", "model", "rag_corpus", "tool"}
@@ -84,8 +76,6 @@ class CFPE0001Rule(DetectionRule):
 
 
 class CFPE0002Rule(DetectionRule):
-    """Memory poisoning."""
-
     id = "CFPE-0002"
     name = "Memory Poisoning"
     applies_to = {"llm", "model", "memory_store"}
@@ -112,8 +102,6 @@ class CFPE0002Rule(DetectionRule):
 
 
 class CFPE0004Rule(DetectionRule):
-    """Agent context propagation."""
-
     id = "CFPE-0004"
     name = "Agent Context Propagation"
     applies_to = {"llm", "model", "tool"}
@@ -153,7 +141,6 @@ RULES = [
 
 
 def detect(graph: Graph) -> list[Finding]:
-    """Run all detection rules."""
     results = []
     for rule in RULES:
         results.extend(rule.detect(graph))

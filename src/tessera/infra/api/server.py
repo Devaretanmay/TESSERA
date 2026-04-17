@@ -1,6 +1,5 @@
 """
-API server - minimal FastAPI.
-Orchestration only, no business logic.
+API server - FastAPI endpoints.
 """
 
 from fastapi import FastAPI, HTTPException, Depends, Header
@@ -8,7 +7,6 @@ from pydantic import BaseModel, Field
 from typing import Optional
 from dataclasses import dataclass
 
-from tessera.core.topology.loader import ValidationError
 from tessera.engine.scanner import Scanner, PipelineError
 from tessera.infra.db.repository import Repository
 
@@ -35,7 +33,6 @@ class AuthContext:
 
 
 def verify_api_key(x_api_key: Optional[str] = Header(None)) -> AuthContext:
-    """Verify API key."""
     if not x_api_key or len(x_api_key) < 16:
         raise HTTPException(status_code=401, detail="Invalid API key")
     return AuthContext(api_key=x_api_key, tenant_id=f"tenant_{x_api_key[:8]}")
@@ -43,19 +40,11 @@ def verify_api_key(x_api_key: Optional[str] = Header(None)) -> AuthContext:
 
 @app.post("/api/v1/scans", response_model=ScanResponse)
 async def create_scan(req: ScanRequest, auth: AuthContext = Depends(verify_api_key)):
-    """Run a security scan."""
     try:
         repo = Repository()
         scanner = Scanner(repo)
-
         scan_id, findings = scanner.run(req.topology_path, req.tier, req.system)
-
-        return ScanResponse(
-            scan_id=scan_id,
-            status="completed",
-            findings_count=len(findings),
-        )
-
+        return ScanResponse(scan_id=scan_id, status="completed", findings_count=len(findings))
     except PipelineError as e:
         raise HTTPException(status_code=400, detail=str(e))
 

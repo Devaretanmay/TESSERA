@@ -1,11 +1,10 @@
 """
-Canonical finding model - single schema for all findings.
+Canonical finding model.
 """
 
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any
 
 
 class FindingSeverity(str, Enum):
@@ -25,8 +24,6 @@ class FailureType(str, Enum):
 
 @dataclass
 class AttackTraceEntry:
-    """Single trace entry."""
-
     node: str
     action: str
     prompt: str = ""
@@ -37,8 +34,6 @@ class AttackTraceEntry:
 
 @dataclass
 class Finding:
-    """Immutable finding - canonical output."""
-
     finding_id: str
     scan_id: str
     severity: FindingSeverity

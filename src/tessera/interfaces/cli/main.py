@@ -1,14 +1,12 @@
 """
-CLI entry point - orchestration only.
-No business logic.
+CLI entry point.
 """
 
 from pathlib import Path
 import typer
+import json
 
-from tessera.core.topology.loader import ValidationError
-from tessera.core.topology.models import Graph
-from tessera.core.detection.rule_engine import DetectionEngine
+from tessera.core.topology.loader import ValidationError, Loader
 from tessera.engine.scanner import Scanner, PipelineError
 from tessera.infra.db.repository import Repository, ScanRecord
 
@@ -21,11 +19,9 @@ def scan(
     tier: str = typer.Option("2", help="Scan tier (1=gate, 2=full, 3=nightly)"),
     system: str = typer.Option("tessera", help="System name"),
 ):
-    """Run security scan on topology."""
     try:
         repo = Repository()
         scanner = Scanner(repo)
-
         scan_id, findings = scanner.run(str(config), tier, system)
 
         typer.echo(f"Scan {scan_id[:8]} completed")
@@ -48,9 +44,6 @@ def topology(
     config: Path = typer.Option(..., exists=True, help="Topology YAML"),
     validate: bool = typer.Option(False, help="Validate only"),
 ):
-    """Validate and display topology."""
-    from tessera.core.topology.loader import Loader
-
     loader = Loader()
 
     try:
@@ -72,7 +65,6 @@ def findings(
     scan_id: str = typer.Option(None, help="Scan ID (latest if omitted)"),
     format: str = typer.Option("json", help="Output format (json/text)"),
 ):
-    """View scan findings."""
     repo = Repository()
 
     if not scan_id:
@@ -93,8 +85,6 @@ def findings(
         for f in findings_list:
             typer.echo(f"  [{f.severity.value.upper()}] {f.failure_type.value}")
     else:
-        import json
-
         typer.echo(json.dumps([f.to_dict() for f in findings_list], indent=2))
 
 
@@ -102,7 +92,6 @@ def findings(
 def scans(
     limit: int = typer.Option(10, help="Number of scans to show"),
 ):
-    """List recent scans."""
     repo = Repository()
     scan_list = repo.list_scans(limit=limit)
 
@@ -120,7 +109,6 @@ def server(
     host: str = typer.Option("127.0.0.1", help="Host"),
     port: int = typer.Option(8000, help="Port"),
 ):
-    """Start API server."""
     import uvicorn
     from tessera.infra.api.server import app
 

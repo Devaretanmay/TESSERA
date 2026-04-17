@@ -1,6 +1,5 @@
 """
 Topology loader - parses YAML into Graph.
-Handles multiple YAML formats.
 """
 
 from pathlib import Path
@@ -9,14 +8,10 @@ from tessera.core.topology.models import Graph, Node, Edge, TrustBoundary, DataF
 
 
 class ValidationError(Exception):
-    """Failed validation."""
-
     pass
 
 
 class Loader:
-    """Loads and validates topology YAML."""
-
     def load(self, path: str | Path) -> Graph:
         path = Path(path)
         if not path.exists():
@@ -24,12 +19,10 @@ class Loader:
 
         data = yaml.safe_load(path.read_text())
 
-        # Some files have "tessera" wrapper, others don't
         tessera_meta = data.get("tessera", {})
         if "system" in tessera_meta:
             data = tessera_meta
 
-        # Normalize system field
         system = data.get("system") or data.get("system_name") or "unknown"
 
         if "nodes" not in data or "edges" not in data:
@@ -37,7 +30,6 @@ class Loader:
 
         graph = Graph(system=system, version=data.get("version", "1.0"))
 
-        # Handle nodes as dict or list
         nodes_data = data.get("nodes", [])
         if isinstance(nodes_data, dict):
             nodes_data = list(nodes_data.values())
@@ -52,7 +44,6 @@ class Loader:
             )
             graph.add_node(node)
 
-        # Handle edges as list
         edges_data = data.get("edges", [])
         for edge_data in edges_data:
             edge = Edge(

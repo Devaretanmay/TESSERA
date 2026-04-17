@@ -1,13 +1,11 @@
 """
-DB models - SQLAlchemy-free persistence layer.
+DB models - SQLite persistence.
 """
 
-import json
 import sqlite3
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any
 
 from tessera.core.findings.models import Finding, FindingSeverity, FailureType
 
@@ -16,7 +14,6 @@ DB_PATH = Path.home() / ".tessera" / "scans.db"
 
 
 def get_db() -> Path:
-    """Get DB path with proper permissions."""
     DB_PATH.parent.mkdir(parents=True, exist_ok=True)
     import os
 
@@ -27,7 +24,6 @@ def get_db() -> Path:
 
 
 def init_db() -> sqlite3.Connection:
-    """Initialize schema."""
     conn = sqlite3.connect(get_db())
     conn.execute("DROP TABLE IF EXISTS scans")
     conn.execute("DROP TABLE IF EXISTS findings")
@@ -69,8 +65,6 @@ class ScanRecord:
 
 
 class Repository:
-    """DB repository."""
-
     def __init__(self, conn: sqlite3.Connection | None = None):
         self.conn = conn or init_db()
 
@@ -128,7 +122,6 @@ class Repository:
         return findings
 
     def list_scans(self, limit: int = 10) -> list[ScanRecord]:
-        """List recent scans."""
         cursor = self.conn.execute("SELECT * FROM scans ORDER BY created_at DESC LIMIT ?", (limit,))
         rows = cursor.fetchall()
         scans = []
