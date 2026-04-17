@@ -1,0 +1,9 @@
+system: "missing_node"
+version: "1.0.0"
+nodes:
+  - id: llm1
+    type: llm
+edges:
+  - from: llm1
+    to: nonexistent
+    flow: tool_call

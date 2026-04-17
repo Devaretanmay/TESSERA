@@ -1,0 +1,13 @@
+system: "orphan_node"
+version: "1.0.0"
+nodes:
+  - id: llm1
+    type: llm
+  - id: tool1
+    type: tool
+  - id: orphan
+    type: llm
+edges:
+  - from: llm1
+    to: tool1
+    flow: tool_call

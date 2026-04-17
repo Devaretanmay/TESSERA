@@ -1,0 +1,6 @@
+system: "empty_edges"
+version: "1.0.0"
+nodes:
+  - id: llm1
+    type: llm
+edges: []
