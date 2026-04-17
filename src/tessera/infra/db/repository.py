@@ -25,30 +25,26 @@ def get_db() -> Path:
 
 def init_db() -> sqlite3.Connection:
     conn = sqlite3.connect(get_db())
-    conn.execute("DROP TABLE IF EXISTS scans")
-    conn.execute("DROP TABLE IF EXISTS findings")
-    conn.execute("""
-        CREATE TABLE scans (
-            scan_id TEXT PRIMARY KEY,
-            system TEXT NOT NULL,
-            tier TEXT NOT NULL,
-            status TEXT NOT NULL,
-            created_at TEXT NOT NULL,
-            completed_at TEXT,
-            tenant_id TEXT
-        )
-    """)
-    conn.execute("""
-        CREATE TABLE findings (
-            finding_id TEXT PRIMARY KEY,
-            scan_id TEXT NOT NULL,
-            severity TEXT NOT NULL,
-            failure_type TEXT NOT NULL,
-            confidence REAL,
-            created_at TEXT,
-            FOREIGN KEY (scan_id) REFERENCES scans(scan_id)
-        )
-    """)
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS scans ("
+        "scan_id TEXT PRIMARY KEY, "
+        "system TEXT NOT NULL, "
+        "tier TEXT NOT NULL, "
+        "status TEXT NOT NULL, "
+        "created_at TEXT NOT NULL, "
+        "completed_at TEXT, "
+        "tenant_id TEXT)"
+    )
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS findings ("
+        "finding_id TEXT PRIMARY KEY, "
+        "scan_id TEXT NOT NULL, "
+        "severity TEXT NOT NULL, "
+        "failure_type TEXT NOT NULL, "
+        "confidence REAL, "
+        "created_at TEXT, "
+        "FOREIGN KEY (scan_id) REFERENCES scans(scan_id))"
+    )
     conn.commit()
     return conn
 
@@ -128,3 +124,13 @@ class Repository:
         for row in rows:
             scans.append(ScanRecord(row[0], row[1], row[2], row[3], row[4], row[5], row[6]))
         return scans
+
+    def resolve_scan_id(self, scan_id_prefix: str) -> str:
+        """Resolve partial scan ID to full ID."""
+        cursor = self.conn.execute(
+            "SELECT scan_id FROM scans WHERE scan_id LIKE ?", (f"{scan_id_prefix}%",)
+        )
+        row = cursor.fetchone()
+        if row:
+            return row[0]
+        return scan_id_prefix

@@ -73,6 +73,8 @@ def findings(
             typer.echo("No scans found", err=True)
             raise typer.Exit(1)
         scan_id = scans[0].scan_id
+    else:
+        scan_id = repo.resolve_scan_id(scan_id)
 
     findings_list = repo.get_findings(scan_id)
 

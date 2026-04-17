@@ -48,29 +48,27 @@ class CFPE0001Rule(DetectionRule):
 
     def detect(self, graph: Graph) -> list[Finding]:
         findings = []
-        node_types = {n.type for n in graph.nodes.values()}
 
-        if self.applies_to & node_types == self.applies_to:
-            has_rag = any(n.type in ("rag_corpus", "model") for n in graph.nodes.values())
-            has_tool = any(n.type == "tool" for n in graph.nodes.values())
+        has_rag = any(n.type in ("rag_corpus", "model") for n in graph.nodes.values())
+        has_tool = any(n.type == "tool" for n in graph.nodes.values())
 
-            if has_rag and has_tool:
-                edge_ids = []
-                for edge in graph.edges:
-                    if edge.data_flow == DataFlow.TOOL_CALL:
-                        edge_ids.append(f"{edge.from_node}->{edge.to_node}")
+        if has_rag and has_tool:
+            edge_ids = []
+            for edge in graph.edges:
+                if edge.data_flow == DataFlow.TOOL_CALL:
+                    edge_ids.append(f"{edge.from_node}->{edge.to_node}")
 
-                if edge_ids:
-                    findings.append(
-                        Finding(
-                            id=self.id,
-                            severity=Severity.HIGH,
-                            category=Category.COMPOUND_CHAIN,
-                            description="RAG to Tool execution chain detected",
-                            edges=edge_ids,
-                            indicators=["rag_tool_chain"],
-                        )
+            if edge_ids:
+                findings.append(
+                    Finding(
+                        id=self.id,
+                        severity=Severity.HIGH,
+                        category=Category.COMPOUND_CHAIN,
+                        description="RAG to Tool execution chain detected",
+                        edges=edge_ids,
+                        indicators=["rag_tool_chain"],
                     )
+                )
 
         return findings
 

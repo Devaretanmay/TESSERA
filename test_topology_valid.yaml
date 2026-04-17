@@ -1,0 +1,20 @@
+system: "customer_support_bot"
+version: "1.0.0"
+nodes:
+  - id: intake
+    type: llm
+    model: gpt-4o
+    trust_boundary: user_controlled
+  - id: rag_kb
+    type: rag_corpus
+    trust_boundary: partially_trusted
+  - id: crm_tool
+    type: tool
+    trust_boundary: internal
+edges:
+  - from: intake
+    to: rag_kb
+    flow: retrieval
+  - from: intake
+    to: crm_tool
+    flow: tool_call
