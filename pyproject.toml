@@ -47,7 +47,7 @@ ml = [
 ]
 
 [project.scripts]
-tessera = "tessera.cli:app"
+tessera = "tessera.interfaces.cli.main:app"
 
 [tool.ruff]
 line-length = 100

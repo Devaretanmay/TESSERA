@@ -126,3 +126,12 @@ class Repository:
                 )
             )
         return findings
+
+    def list_scans(self, limit: int = 10) -> list[ScanRecord]:
+        """List recent scans."""
+        cursor = self.conn.execute("SELECT * FROM scans ORDER BY created_at DESC LIMIT ?", (limit,))
+        rows = cursor.fetchall()
+        scans = []
+        for row in rows:
+            scans.append(ScanRecord(row[0], row[1], row[2], row[3], row[4], row[5], row[6]))
+        return scans
