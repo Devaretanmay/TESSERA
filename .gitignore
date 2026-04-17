@@ -2,6 +2,7 @@
 __pycache__/
 *.py[cod]
 *$py.class
+.pytest_cache/
 
 # Distribution / packaging
 build/
@@ -19,8 +20,10 @@ ENV/
 *.swp
 *.swo
 
-# Testing
-.pytest_cache/
+# Ruff
+.ruff_cache/
+
+# Coverage
 .coverage
 htmlcov/
 
@@ -34,3 +37,10 @@ Thumbs.db
 # Temporary
 *.tmp
 *.bak
+
+# Database (local persistence)
+*.db
+
+# Environment
+.env
+.env.local
