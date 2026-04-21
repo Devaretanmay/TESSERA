@@ -153,7 +153,9 @@ class GNNScanner:
             if e.get("from") in node_id_to_idx and e.get("to") in node_id_to_idx:
                 edge_src.append(node_id_to_idx[e["from"]])
                 edge_dst.append(node_id_to_idx[e["to"]])
-                edge_flows.append(FLOW_MAP.get(e.get("data_flow", ""), 0))
+                # Accept both "flow" and "data_flow" keys
+                flow = e.get("data_flow") or e.get("flow") or ""
+                edge_flows.append(FLOW_MAP.get(flow, 0))
 
         max_n, max_e = 32, 64
         while len(node_types) < max_n:
