@@ -5,6 +5,20 @@ All notable changes to TESSERA will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-04-22
+
+### Added
+- **TESSERA-RDT**: Recurrent-Depth Transformer for ML-based compound attack detection
+  - Node/Edge encoders for graph topology
+  - Sparse MoE for diverse vulnerability patterns
+  - LTI stability for stable training
+  - Adaptive Computation Time (ACT) for dynamic reasoning depth
+  - RDTScanner for inference
+- Model weights in data/ directory
+
+### Changed
+- RDT module added: `src/tessera/rdt/`
+
 ## [1.0.3] - 2026-04-17
 
 ### Added
@@ -25,14 +39,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Restructured from prototype to production layout
 - Removed experimental/dead code
 
-## [1.0.0] - 2026-04-?? - [YANKED]
+## [1.0.0] - [YANKED]
 
-### Added
-- Initial release (prototype phase)
-
-### Removed
-- This version is no longer available.
-
-## [1.0.0-beta] - [YANKED]
-
-Early prototype releases - no longer tracked.
+Initial release - no longer available.
