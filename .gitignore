@@ -44,3 +44,10 @@ Thumbs.db
 # Environment
 .env
 .env.local
+
+# Trained models (large binaries)
+data/*.pt
+data/*.ckpt
+
+# Training data
+data/*.jsonl
