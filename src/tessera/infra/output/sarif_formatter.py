@@ -144,6 +144,60 @@ class SarifFormatter(OutputFormatter):
                 },
                 "properties": {"security-severity": "5.0"},
             },
+            {
+                "id": "CFPE-0007",
+                "name": "Sensitive Data Exfiltration",
+                "shortDescription": {"text": "LLM can send data to external service"},
+                "fullDescription": {
+                    "text": "Detects when LLM or agent can send sensitive data to external services."
+                },
+                "defaultConfiguration": {"level": "error"},
+                "help": {
+                    "text": "Implement output filtering for sensitive data.",
+                    "markdown": "## Remediation\n\n1. Implement DLP checks\n2. Add audit logging",
+                },
+                "properties": {"security-severity": "9.5"},
+            },
+            {
+                "id": "CFPE-0008",
+                "name": "RAG Context Injection",
+                "shortDescription": {"text": "User input can inject into RAG context"},
+                "fullDescription": {
+                    "text": "Detects when user input can directly inject into RAG context without sanitization."
+                },
+                "defaultConfiguration": {"level": "warning"},
+                "help": {
+                    "text": "Sanitize user input before RAG embedding.",
+                    "markdown": "## Remediation\n\n1. Sanitize input\n2. Implement context isolation",
+                },
+                "properties": {"security-severity": "8.0"},
+            },
+            {
+                "id": "CFPE-0009",
+                "name": "MCP Config Attack",
+                "shortDescription": {"text": "MCP server vulnerability"},
+                "fullDescription": {"text": "Detects potential MCP configuration vulnerabilities."},
+                "defaultConfiguration": {"level": "warning"},
+                "help": {
+                    "text": "Validate MCP server authenticity.",
+                    "markdown": "## Remediation\n\n1. Use signed configs\n2. Implement allowlisting",
+                },
+                "properties": {"security-severity": "7.5"},
+            },
+            {
+                "id": "CFPE-0010",
+                "name": "Agent Skill Injection",
+                "shortDescription": {"text": "External source can modify skills"},
+                "fullDescription": {
+                    "text": "Detects when external sources can modify agent skill definitions."
+                },
+                "defaultConfiguration": {"level": "warning"},
+                "help": {
+                    "text": "Protect skill definitions from injection.",
+                    "markdown": "## Remediation\n\n1. Use read-only skills\n2. Sign skill files",
+                },
+                "properties": {"security-severity": "8.0"},
+            },
         ]
         return rules
 

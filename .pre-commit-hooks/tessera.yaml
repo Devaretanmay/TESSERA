@@ -1,0 +1,18 @@
+# Pre-commit hook for TESSERA security scanning
+#
+# Install: Add this file to .pre-commit-config.yaml in your repo
+# Or use: pre-commit install -t pre-commit --hook-type tessera-scan
+
+repos:
+  - repo: https://github.com/Devaretanmay/TESSERA
+    rev: v2.0.0
+    hooks:
+      - id: tessera-scan
+        name: TESSERA Security Scan
+        description: Scan YAML topology files for security vulnerabilities
+        entry: tessera scan --format sarif
+        types: [yaml]
+        pass_filenames: false
+        files: '^examples/'
+        args: ['--config', 'examples/']
+        stages: [push, pull_request]

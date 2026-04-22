@@ -370,6 +370,210 @@ class CFPE0006Rule(DetectionRule):
         return findings
 
 
+class CFPE0007Rule(DetectionRule):
+    """CFPE-0007: Sensitive Data Exfiltration
+
+    Detects when LLM or agent can send sensitive data to external services.
+    """
+
+    id = "CFPE-0007"
+    name = "Sensitive Data Exfiltration"
+    applies_to = {"llm", "model", "external_service"}
+    remediation = {
+        "summary": "Prevent sensitive data from being sent to external services",
+        "how_to_fix": (
+            "1. Implement output filtering for sensitive data\n"
+            "2. Add data loss prevention (DLP) checks\n"
+            "3. Use internal tools for sensitive operations\n"
+            "4. Add audit logging for external calls\n"
+            "5. Implement rate limiting on external APIs"
+        ),
+        "references": ["OWASP LLM04", "CWE-200"],
+    }
+
+    def detect(self, graph: Graph) -> list[Finding]:
+        findings = []
+
+        llm_nodes = {nid: n for nid, n in graph.nodes.items() if n.type in ("llm", "model")}
+
+        external_services = {
+            nid: n for nid, n in graph.nodes.items() if n.type == "external_service"
+        }
+
+        if not llm_nodes or not external_services:
+            return findings
+
+        for edge in graph.edges:
+            from_is_llm = edge.from_node in llm_nodes
+            to_is_external = edge.to_node in external_services
+
+            if from_is_llm and to_is_external:
+                findings.append(
+                    Finding(
+                        id=self.id,
+                        severity=Severity.CRITICAL,
+                        category=Category.COMPOUND_CHAIN,
+                        description=f"LLM can send data to external service '{edge.to_node}'",
+                        edges=[f"{edge.from_node}->{edge.to_node}"],
+                        indicators=["data_exfiltration"],
+                        remediation=self.remediation,
+                    )
+                )
+
+        return findings
+
+
+class CFPE0008Rule(DetectionRule):
+    """CFPE-0008: RAG Context Injection
+
+    Detects when user input can directly inject into RAG context
+    without proper sanitization.
+    """
+
+    id = "CFPE-0008"
+    name = "RAG Context Injection"
+    applies_to = {"user", "rag_corpus", "llm"}
+    remediation = {
+        "summary": "Sanitize user input before adding to RAG context",
+        "how_to_fix": (
+            "1. Sanitize user input before RAG embedding\n"
+            "2. Implement context isolation\n"
+            "3. Use separate embeddings for user vs system data\n"
+            "4. Add input validation and filtering"
+        ),
+        "references": ["OWASP LLM01", "CWE-20"],
+    }
+
+    def detect(self, graph: Graph) -> list[Finding]:
+        findings = []
+
+        user_nodes = {nid: n for nid, n in graph.nodes.items() if n.type == "user"}
+        rag_nodes = {nid: n for nid, n in graph.nodes.items() if n.type == "rag_corpus"}
+
+        if not user_nodes or not rag_nodes:
+            return findings
+
+        for edge in graph.edges:
+            from_is_user = edge.from_node in user_nodes
+            to_is_rag = edge.to_node in rag_nodes
+
+            if from_is_user and to_is_rag:
+                findings.append(
+                    Finding(
+                        id=self.id,
+                        severity=Severity.HIGH,
+                        category=Category.ATOMIC_INJECTION,
+                        description=f"User input directly writes to RAG corpus '{edge.to_node}'",
+                        edges=[f"{edge.from_node}->{edge.to_node}"],
+                        indicators=["rag_injection"],
+                        remediation=self.remediation,
+                    )
+                )
+
+        return findings
+
+
+class CFPE0009Rule(DetectionRule):
+    """CFPE-0009: MCP Config Attack
+
+    Detects potential MCP (Model Context Protocol) configuration vulnerabilities.
+    """
+
+    id = "CFPE-0009"
+    name = "MCP Config Attack"
+    applies_to = {"mcp_server", "mcp_client", "tool"}
+    remediation = {
+        "summary": "Secure MCP server configurations",
+        "how_to_fix": (
+            "1. Validate MCP server authenticity\n"
+            "2. Use signed MCP configurations\n"
+            "3. Implement MCP server allowlisting\n"
+            "4. Add MCP request validation"
+        ),
+        "references": ["OWASP LLM05", "CWE-94"],
+    }
+
+    def detect(self, graph: Graph) -> list[Finding]:
+        findings = []
+
+        mcp_servers = {nid: n for nid, n in graph.nodes.items() if n.type == "mcp_server"}
+
+        if not mcp_servers:
+            return findings
+
+        for edge in graph.edges:
+            from_is_mcp = edge.from_node in mcp_servers
+            to_is_tool = (
+                graph.nodes.get(edge.to_node) and graph.nodes.get(edge.to_node).type == "tool"
+            )
+
+            if from_is_mcp and to_is_tool:
+                findings.append(
+                    Finding(
+                        id=self.id,
+                        severity=Severity.HIGH,
+                        category=Category.COMPOUND_CHAIN,
+                        description=f"MCP server '{edge.from_node}' can access tool '{edge.to_node}'",
+                        edges=[f"{edge.from_node}->{edge.to_node}"],
+                        indicators=["mcp_tool_access"],
+                        remediation=self.remediation,
+                    )
+                )
+
+        return findings
+
+
+class CFPE0010Rule(DetectionRule):
+    """CFPE-0010: Agent Skill Injection
+
+    Detects when external/skilled agents can modify agent skill definitions.
+    """
+
+    id = "CFPE-0010"
+    name = "Agent Skill Injection"
+    applies_to = {"skill", "llm", "model", "external"}
+    remediation = {
+        "summary": "Protect agent skill definitions from injection",
+        "how_to_fix": (
+            "1. Use read-only skill definitions\n"
+            "2. Sign and verify skill files\n"
+            "3. Implement skill allowlisting\n"
+            "4. Add skill change audit logging"
+        ),
+        "references": ["OWASP LLM01", "CWE-94"],
+    }
+
+    def detect(self, graph: Graph) -> list[Finding]:
+        findings = []
+
+        skill_nodes = {nid: n for nid, n in graph.nodes.items() if n.type == "skill"}
+        external_nodes = {
+            nid: n for nid, n in graph.nodes.items() if n.trust_boundary == TrustBoundary.EXTERNAL
+        }
+
+        if not skill_nodes or not external_nodes:
+            return findings
+
+        for edge in graph.edges:
+            from_is_external = edge.from_node in external_nodes
+            to_is_skill = edge.to_node in skill_nodes
+
+            if from_is_external and to_is_skill:
+                findings.append(
+                    Finding(
+                        id=self.id,
+                        severity=Severity.HIGH,
+                        category=Category.ATOMIC_INJECTION,
+                        description=f"External source '{edge.from_node}' can modify skill '{edge.to_node}'",
+                        edges=[f"{edge.from_node}->{edge.to_node}"],
+                        indicators=["skill_injection"],
+                        remediation=self.remediation,
+                    )
+                )
+
+        return findings
+
+
 RULES = [
     CFPE0001Rule(),
     CFPE0002Rule(),
@@ -377,6 +581,10 @@ RULES = [
     CFPE0004Rule(),
     CFPE0005Rule(),
     CFPE0006Rule(),
+    CFPE0007Rule(),
+    CFPE0008Rule(),
+    CFPE0009Rule(),
+    CFPE0010Rule(),
 ]
 
 

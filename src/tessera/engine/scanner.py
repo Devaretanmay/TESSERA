@@ -15,6 +15,7 @@ from tessera.infra.output.base import ScanResult
 from tessera.infra.output.sarif_formatter import SarifFormatter
 from tessera.infra.output.json_formatter import JsonFormatter
 from tessera.infra.output.text_formatter import TextFormatter
+from tessera.infra.output.html_formatter import HtmlFormatter
 
 
 class OutputFormat(str, Enum):
@@ -23,6 +24,7 @@ class OutputFormat(str, Enum):
     JSON = "json"
     SARIF = "sarif"
     TEXT = "text"
+    HTML = "html"
 
 
 class Tesseract:
@@ -39,6 +41,7 @@ class Tesseract:
             OutputFormat.JSON: JsonFormatter(),
             OutputFormat.SARIF: SarifFormatter(),
             OutputFormat.TEXT: TextFormatter(),
+            OutputFormat.HTML: HtmlFormatter(),
         }
         self._llm_provider = None
         self._llm_enabled = False
