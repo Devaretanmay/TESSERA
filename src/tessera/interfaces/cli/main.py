@@ -1,5 +1,5 @@
 """
-CLI entry point.
+CLI entry point for TESSERA.
 """
 
 from pathlib import Path
@@ -7,43 +7,64 @@ import typer
 import json
 
 from tessera.core.topology.loader import ValidationError, Loader
-from tessera.engine.scanner import Scanner, PipelineError
-from tessera.infra.db.repository import Repository, ScanRecord
+from tessera.engine.scanner import Tesseract, OutputFormat
 
 app = typer.Typer(help="TESSERA - AI Security Scanner")
 
 
 @app.command()
 def scan(
-    config: Path = typer.Option(..., exists=True, help="Topology YAML"),
-    tier: str = typer.Option("2", help="Scan tier (1=gate, 2=full, 3=nightly)"),
-    system: str = typer.Option("tessera", help="System name"),
+    config: Path = typer.Option(..., exists=True, help="Topology YAML file"),
+    format: str = typer.Option("text", help="Output format: text, json, sarif"),
+    llm: bool = typer.Option(False, help="Enable LLM analysis"),
+    output: Path = typer.Option(None, help="Output file (optional)"),
 ):
+    """Scan a topology file for security vulnerabilities."""
     try:
-        repo = Repository()
-        scanner = Scanner(repo)
-        scan_id, findings = scanner.run(str(config), tier, system)
+        scanner = Tesseract()
 
-        typer.echo(f"Scan {scan_id[:8]} completed")
-        typer.echo(f"Findings: {len(findings)}")
+        # Enable LLM if requested
+        if llm:
+            scanner.enable_llm()
 
-        if findings:
-            typer.echo("\nResults:")
-            for f in findings:
-                typer.echo(f"  [{f.severity.value.upper()}] {f.failure_type.value}")
+        # Run scan
+        format_enum = OutputFormat(format.lower())
+        result = scanner.scan(str(config), format_enum, llm_enabled=llm)
+
+        # Output
+        if output:
+            if format == "json" or format == "sarif":
+                with open(output, "w") as f:
+                    json.dump(result, f, indent=2)
+                typer.echo(f"Results written to {output}")
+            else:
+                with open(output, "w") as f:
+                    f.write(result)
+                typer.echo(f"Results written to {output}")
+        else:
+            if format == "json" or format == "sarif":
+                typer.echo(json.dumps(result, indent=2))
+            else:
+                typer.echo(result)
+
+        # Summary
+        if format == "json" and isinstance(result, dict):
+            summary = result.get("summary", {})
+            typer.echo(f"\nTotal findings: {summary.get('total', 0)}")
 
         raise typer.Exit(0)
 
-    except (ValidationError, PipelineError) as e:
+    except Exception as e:
         typer.echo(f"Error: {e}", err=True)
         raise typer.Exit(1)
 
 
 @app.command()
 def topology(
-    config: Path = typer.Option(..., exists=True, help="Topology YAML"),
+    config: Path = typer.Option(..., exists=True, help="Topology YAML file"),
     validate: bool = typer.Option(False, help="Validate only"),
 ):
+    """Show topology information."""
     loader = Loader()
 
     try:
@@ -61,61 +82,51 @@ def topology(
 
 
 @app.command()
-def findings(
-    scan_id: str = typer.Option(None, help="Scan ID (latest if omitted)"),
-    format: str = typer.Option("json", help="Output format (json/text)"),
-):
-    repo = Repository()
+def list_rules():
+    """List all detection rules."""
+    from tessera.core.detection.patterns import RULES
 
-    if not scan_id:
-        scans = repo.list_scans(limit=1)
-        if not scans:
-            typer.echo("No scans found", err=True)
-            raise typer.Exit(1)
-        scan_id = scans[0].scan_id
-    else:
-        scan_id = repo.resolve_scan_id(scan_id)
+    typer.echo("CFPE Detection Rules:")
+    typer.echo("=" * 50)
 
-    findings_list = repo.get_findings(scan_id)
-
-    if not findings_list:
-        typer.echo(f"No findings for scan {scan_id[:8]}")
-        return
-
-    if format == "text":
-        typer.echo(f"Findings for {scan_id[:8]} ({len(findings_list)}):")
-        for f in findings_list:
-            typer.echo(f"  [{f.severity.value.upper()}] {f.failure_type.value}")
-    else:
-        typer.echo(json.dumps([f.to_dict() for f in findings_list], indent=2))
+    for rule in RULES:
+        typer.echo(f"\n{rule.id}: {rule.name}")
+        if hasattr(rule, "remediation"):
+            typer.echo(f"  Remediation: {rule.remediation.get('summary', 'N/A')}")
 
 
 @app.command()
-def scans(
-    limit: int = typer.Option(10, help="Number of scans to show"),
+def explain(
+    rule_id: str = typer.Argument(..., help="Rule ID (e.g., CFPE-0001)"),
 ):
-    repo = Repository()
-    scan_list = repo.list_scans(limit=limit)
+    """Explain a detection rule."""
+    from tessera.core.detection.patterns import RULES
 
-    if not scan_list:
-        typer.echo("No scans found")
-        return
+    for rule in RULES:
+        if rule.id == rule_id:
+            typer.echo(f"{rule.id}: {rule.name}")
+            typer.echo(f"Applies to: {', '.join(rule.applies_to)}")
 
-    typer.echo(f"Recent scans ({len(scan_list)}):")
-    for s in scan_list:
-        typer.echo(f"  {s.scan_id[:8]} | {s.system} | tier {s.tier} | {s.created_at[:10]}")
+            if hasattr(rule, "remediation"):
+                rem = rule.remediation
+                typer.echo(f"\nRemediation:")
+                typer.echo(f"  Summary: {rem.get('summary', 'N/A')}")
+                typer.echo(f"  How to fix:\n{rem.get('how_to_fix', 'N/A')}")
+                refs = rem.get("references", [])
+                if refs:
+                    typer.echo(f"  References: {', '.join(refs)}")
+            return
+
+    typer.echo(f"Rule {rule_id} not found", err=True)
+    raise typer.Exit(1)
 
 
 @app.command()
-def server(
-    host: str = typer.Option("127.0.0.1", help="Host"),
-    port: int = typer.Option(8000, help="Port"),
-):
-    import uvicorn
-    from tessera.infra.api.server import app
+def version():
+    """Show version information."""
+    from tessera import __version__
 
-    typer.echo(f"Starting server on {host}:{port}")
-    uvicorn.run(app, host=host, port=port)
+    typer.echo(f"TESSERA v{__version__}")
 
 
 if __name__ == "__main__":

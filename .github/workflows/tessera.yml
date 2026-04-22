@@ -3,10 +3,6 @@
 # This workflow runs TESSERA security scans on YAML topology files.
 # Results are uploaded to GitHub Code Scanning.
 #
-# Configuration options:
-#   - fail-on-severity: Severity level to fail on (critical, high, medium, low)
-#   - scan-paths: Paths to scan (default: examples/)
-#
 # For SARIF output, results appear in GitHub Security tab under "Code Scanning".
 
 name: TESSERA Security Scan
@@ -43,29 +39,17 @@ jobs:
           python-version: '3.11'
       
       - name: Install TESSERA
-        run: |
-          pip install tessera-security
+        run: pip install tessera-security
       
       - name: Run TESSERA scan
-        continue-on-error: true
         run: |
-          # Scan all YAML files and output SARIF
-          find . -name "*.yaml" -type f | head -20 | while read file; do
-            echo "Scanning: $file"
-            tessera scan "$file" --format sarif --output "$(basename $file .yaml).sarif" || true
-          done
-          
-          # Also try to scan examples directory
-          if [ -d "examples" ]; then
-            tessera scan-dir examples/ --format sarif --output results.sarif || true
-          fi
+          # Scan examples directory
+          tessera scan --config examples/complex_agent.yaml --format sarif --output results.sarif
       
       - name: Upload SARIF results
         uses: github/codeql-action/upload-sarif@v4
         with:
-          sarif_file: |
-            results.sarif
-            examples/*.sarif
+          sarif_file: results.sarif
           category: tessera
       
       - name: Show summary
@@ -73,9 +57,3 @@ jobs:
           echo "TESSERA scan complete"
           echo ""
           echo "Results uploaded to GitHub Security tab"
-          echo ""
-          echo "To view results:"
-          echo "1. Go to your repository on GitHub"
-          echo "2. Click the 'Security' tab"
-          echo "3. Click 'Code scanning'"
-          echo "4. View TESSERA findings"
