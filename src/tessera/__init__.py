@@ -10,7 +10,13 @@ from tessera.infra.output.json_formatter import format_to_json
 from tessera.infra.output.text_formatter import format_to_text
 from tessera.infra.output.html_formatter import format_to_html
 from tessera.engine.scanner import Tesseract, scan, OutputFormat
-from tessera.infra.llm import LLMProvider, LLMConfig, RiskAssessment, create_provider
+from tessera.infra.llm import (
+    LLMProvider,
+    LLMConfig,
+    RiskAssessment,
+    create_provider,
+    get_available_providers,
+)
 
 __all__ = [
     # Version
@@ -46,4 +52,5 @@ __all__ = [
     "LLMConfig",
     "RiskAssessment",
     "create_provider",
+    "get_available_providers",
 ]
