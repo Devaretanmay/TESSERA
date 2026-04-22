@@ -2,15 +2,12 @@
 
 AI Security Scanner for Compound Attack Chain Detection
 
-**Version:** 1.0.4  
+**Version:** 1.1.0  
 **Date:** April 2026
 
 ## What
 
-TESSERA detects compound attack chains in AI/Agent systems. It uses two detection approaches:
-
-1. **CFPE Rules** - Rule-based detection of known vulnerability patterns
-2. **GNN Scanner** - ML-based detection using Graph Neural Networks (82.9% F1)
+TESSERA detects compound attack chains in AI/Agent systems using **CFPE Rules** - rule-based detection of known vulnerability patterns.
 
 ## Install
 
@@ -37,14 +34,46 @@ tessera scan --config my_agent.yaml
 ### Python API
 
 ```python
-from tessera.rdt.gnn_scanner import GNNScanner
+from tessera import detect, Graph, Node, Edge, TrustBoundary, DataFlow
 
-scanner = GNNScanner("data/best_model_v2.pt")
-result = scanner.scan_topology(topology)
+# Define your agent topology
+graph = Graph(
+    system="my_agent",
+    nodes={
+        "user": Node(id="user", type="user", trust_boundary=TrustBoundary.EXTERNAL),
+        "llm": Node(id="llm", type="llm", trust_boundary=TrustBoundary.INTERNAL),
+        "tool": Node(id="tool", type="tool", trust_boundary=TrustBoundary.INTERNAL),
+    },
+    edges=[
+        Edge(from_node="user", to_node="llm", data_flow=DataFlow.API, trust_boundary=TrustBoundary.EXTERNAL),
+        Edge(from_node="llm", to_node="tool", data_flow=DataFlow.TOOL_CALL, trust_boundary=TrustBoundary.INTERNAL),
+    ]
+)
 
-print(f"Vulnerable: {result['vulnerable']}")
-print(f"Confidence: {result['confidence']:.0%}")
-print(f"Severity: {result['severity']}")
+# Detect vulnerabilities
+findings = detect(graph)
+
+for finding in findings:
+    print(f"[{finding.severity.value.upper()}] {finding.id}: {finding.description}")
+```
+
+## Testing
+
+Run the included examples:
+
+```bash
+python -c "
+import sys; sys.path.insert(0, 'src')
+from tessera.core.topology.loader import Loader
+from tessera import detect
+
+loader = Loader()
+graph = loader.load('examples/complex_agent.yaml')
+findings = detect(graph)
+print(f'Found {len(findings)} vulnerabilities')
+for f in findings:
+    print(f'  - {f.id}: {f.description}')
+"
 ```
 
 ## Architecture
@@ -55,10 +84,6 @@ src/tessera/
 │   ├── topology/           # Graph models
 │   ├── detection/          # CFPE rules
 │   └── findings/           # Finding models
-├── rdt/                    # ML scanner
-│   ├── gnn_scanner.py       # GNN-based scanner
-│   ├── model.py            # RDT model
-│   └── recurrent_block.py   # Core architecture
 ├── engine/                 # Pipeline
 ├── infra/                   # API & DB
 └── interfaces/             # CLI
@@ -86,13 +111,6 @@ src/tessera/
 ## Trust Boundaries
 
 `external` → `user_controlled` → `partially_trusted` → `internal` → `privileged`
-
-## Results
-
-| Detector | Precision | Recall | F1 |
-|----------|-----------|--------|-----|
-| CFPE Rules | 20% | 84% | 32% |
-| **GNN Scanner** | **77%** | **90%** | **83%** |
 
 ## License
 

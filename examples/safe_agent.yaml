@@ -1,0 +1,41 @@
+# Safe agent - no vulnerabilities detected
+# This is a properly secured agent with:
+# - No RAG to Tool chain
+# - Read-only memory access
+# - Proper trust boundaries
+
+system: safe_chatbot
+version: "1.0"
+
+nodes:
+  user:
+    id: user
+    type: user
+    trust_boundary: external
+  
+  api_gateway:
+    id: api_gateway
+    type: api
+    trust_boundary: external
+  
+  llm:
+    id: llm
+    type: llm
+    trust_boundary: internal
+    provider: openai
+
+edges:
+  - from: user
+    to: api_gateway
+    flow: api
+    trust_boundary: external
+  
+  - from: api_gateway
+    to: llm
+    flow: inference
+    trust_boundary: external
+  
+  - from: llm
+    to: api_gateway
+    flow: api
+    trust_boundary: internal

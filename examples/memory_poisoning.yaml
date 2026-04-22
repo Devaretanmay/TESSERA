@@ -1,0 +1,49 @@
+# Memory Poisoning vulnerability - CFPE-0002
+# An LLM with memory store that can be poisoned by malicious inputs
+# Attackers can inject content that persists and affects future responses
+
+system: agent_with_memory
+version: "1.0"
+
+nodes:
+  user:
+    id: user
+    type: user
+    trust_boundary: external
+  
+  chat_llm:
+    id: chat_llm
+    type: llm
+    trust_boundary: internal
+    provider: anthropic
+  
+  memory:
+    id: memory
+    type: memory_store
+    trust_boundary: internal
+  
+  vector_db:
+    id: vector_db
+    type: database
+    trust_boundary: internal
+
+edges:
+  - from: user
+    to: chat_llm
+    flow: api
+    trust_boundary: external
+  
+  - from: chat_llm
+    to: memory
+    flow: read_write
+    trust_boundary: internal
+  
+  - from: memory
+    to: chat_llm
+    flow: api
+    trust_boundary: internal
+  
+  - from: chat_llm
+    to: vector_db
+    flow: read_write
+    trust_boundary: internal

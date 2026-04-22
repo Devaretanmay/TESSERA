@@ -1,0 +1,103 @@
+# Complex agent with multiple vulnerabilities
+# This demonstrates a real-world agent with multiple security issues
+
+system: production_agent
+version: "1.0"
+
+nodes:
+  # User-facing components
+  user_input:
+    id: user_input
+    type: user
+    trust_boundary: external
+  
+  web_api:
+    id: web_api
+    type: api
+    trust_boundary: external
+  
+  # Core AI
+  reasoning_llm:
+    id: reasoning_llm
+    type: llm
+    trust_boundary: internal
+    provider: anthropic
+  
+  # Tools and services
+  search_tool:
+    id: search_tool
+    type: tool
+    trust_boundary: internal
+  
+  database:
+    id: database
+    type: database
+    trust_boundary: internal
+  
+  # Memory
+  conversation_history:
+    id: conversation_history
+    type: memory_store
+    trust_boundary: internal
+  
+  knowledge_base:
+    id: knowledge_base
+    type: rag_corpus
+    trust_boundary: internal
+  
+  # External
+  payment_api:
+    id: payment_api
+    type: external_service
+    trust_boundary: external
+
+edges:
+  # User to system
+  - from: user_input
+    to: web_api
+    flow: api
+    trust_boundary: external
+  
+  - from: web_api
+    to: reasoning_llm
+    flow: api
+    trust_boundary: external
+  
+  # Reasoning chain
+  - from: reasoning_llm
+    to: conversation_history
+    flow: read_write
+    trust_boundary: internal
+  
+  - from: reasoning_llm
+    to: knowledge_base
+    flow: retrieval
+    trust_boundary: internal
+  
+  - from: knowledge_base
+    to: reasoning_llm
+    flow: retrieval
+    trust_boundary: internal
+  
+  # Tool calls - VULNERABLE: RAG to Tool
+  - from: knowledge_base
+    to: search_tool
+    flow: tool_call
+    trust_boundary: internal
+  
+  - from: reasoning_llm
+    to: search_tool
+    flow: tool_call
+    trust_boundary: internal
+  
+  # Database access - potential data leak
+  - from: reasoning_llm
+    to: database
+    flow: read_write
+    trust_boundary: internal
+  
+  # External API - trust boundary crossing
+  - from: reasoning_llm
+    to: payment_api
+    flow: api
+    trust_boundary: external

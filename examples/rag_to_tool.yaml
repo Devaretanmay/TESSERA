@@ -1,0 +1,51 @@
+# RAG to Tool vulnerability - CFPE-0001
+# This topology represents a common AI agent pattern where:
+# User input -> LLM -> RAG (knowledge retrieval) -> Tool (external action)
+# Attackers can inject malicious content into RAG that triggers harmful tool calls
+
+system: rag_tool_agent
+version: "1.0"
+
+nodes:
+  user_input:
+    id: user_input
+    type: user
+    trust_boundary: external
+  
+  llm:
+    id: llm
+    type: llm
+    trust_boundary: internal
+    provider: openai
+  
+  knowledge_base:
+    id: knowledge_base
+    type: rag_corpus
+    trust_boundary: internal
+  
+  tool_executor:
+    id: tool_executor
+    type: tool
+    trust_boundary: internal
+    provider: aws
+
+edges:
+  - from: user_input
+    to: llm
+    flow: api
+    trust_boundary: external
+  
+  - from: llm
+    to: knowledge_base
+    flow: retrieval
+    trust_boundary: internal
+  
+  - from: knowledge_base
+    to: llm
+    flow: retrieval
+    trust_boundary: internal
+  
+  - from: llm
+    to: tool_executor
+    flow: tool_call
+    trust_boundary: internal
