@@ -2,12 +2,20 @@
 
 AI Security Scanner for Compound Attack Chain Detection
 
-**Version:** 1.1.0  
+**Version:** 2.0.0  
 **Date:** April 2026
 
 ## What
 
-TESSERA detects compound attack chains in AI/Agent systems using **CFPE Rules** - rule-based detection of known vulnerability patterns.
+TESSERA detects compound attack chains in AI/Agent systems using **CFPE Rules** - rule-based detection of known vulnerability patterns. It also supports optional **LLM-powered analysis** for semantic vulnerability detection.
+
+## Features
+
+- **10 CFPE Detection Patterns** - Comprehensive coverage of AI agent vulnerabilities
+- **Multiple Output Formats** - Text, JSON, SARIF, HTML
+- **LLM Integration** - Optional AI-powered analysis (OpenAI, Anthropic, Ollama)
+- **CI/CD Ready** - GitHub Actions, pre-commit hooks
+- **MCP Server** - Model Context Protocol support
 
 ## Install
 
@@ -25,18 +33,50 @@ pip install -e .
 
 ## Quick Start
 
-### Scan a topology
+### CLI
 
 ```bash
+# Scan a topology
 tessera scan --config my_agent.yaml
+
+# Output formats: text (default), json, sarif, html
+tessera scan --config my_agent.yaml --format sarif
+
+# List all detection rules
+tessera list-rules
+
+# Explain a specific rule
+tessera explain CFPE-0001
 ```
 
 ### Python API
 
 ```python
-from tessera import detect, Graph, Node, Edge, TrustBoundary, DataFlow
+from tessera import Tesseract, OutputFormat
 
-# Define your agent topology
+# Simple usage
+scanner = Tesseract()
+result = scanner.scan("my_agent.yaml", OutputFormat.TEXT)
+
+# JSON output
+result = scanner.scan("my_agent.yaml", OutputFormat.JSON)
+print(f"Found {result['summary']['total']} vulnerabilities")
+
+# HTML report
+result = scanner.scan("my_agent.yaml", OutputFormat.HTML)
+with open("report.html", "w") as f:
+    f.write(result)
+
+# With LLM analysis (requires API key)
+scanner.enable_llm({"provider": "openai"})
+result = scanner.scan("my_agent.yaml", OutputFormat.JSON, llm_enabled=True)
+```
+
+### Programmatic Topology
+
+```python
+from tessera import Graph, Node, Edge, TrustBoundary, DataFlow, detect
+
 graph = Graph(
     system="my_agent",
     nodes={
@@ -50,67 +90,179 @@ graph = Graph(
     ]
 )
 
-# Detect vulnerabilities
 findings = detect(graph)
 
 for finding in findings:
     print(f"[{finding.severity.value.upper()}] {finding.id}: {finding.description}")
 ```
 
-## Testing
+## Output Formats
 
-Run the included examples:
+### Text (CLI default)
+```
+TESSERA Security Scan
+========================================
+System: my_agent
+Version: 1.0
+Graph: 3 nodes, 2 edges
+Scan time: 0.05ms
 
+Summary:
+  HIGH: 1
+
+Findings:
+
+1. [HIGH] CFPE-0001
+   RAG to Tool execution chain detected
+   Remediation:
+   1. Validate RAG outputs before tool execution
+   ...
+```
+
+### JSON
+```json
+{
+  "tessera_version": "2.0.0",
+  "scan": {
+    "system": "my_agent",
+    "version": "1.0",
+    "scan_time_ms": 0.05,
+    "graph": {"nodes": 3, "edges": 2}
+  },
+  "findings": [...],
+  "summary": {"total": 1, "by_severity": {"critical": 0, "high": 1}}
+}
+```
+
+### SARIF (GitHub Code Scanning)
 ```bash
-python -c "
-import sys; sys.path.insert(0, 'src')
-from tessera.core.topology.loader import Loader
-from tessera import detect
+tessera scan --config my_agent.yaml --format sarif --output results.sarif
+```
+Results appear in GitHub Security tab under "Code Scanning".
 
-loader = Loader()
-graph = loader.load('examples/complex_agent.yaml')
-findings = detect(graph)
-print(f'Found {len(findings)} vulnerabilities')
-for f in findings:
-    print(f'  - {f.id}: {f.description}')
-"
+### HTML
+Generate beautiful HTML reports:
+```bash
+tessera scan --config my_agent.yaml --format html --output report.html
+```
+
+## CI/CD Integration
+
+### GitHub Actions
+```yaml
+name: TESSERA Security Scan
+on: [push, pull_request]
+
+jobs:
+  tessera:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - run: pip install tessera-security
+      - run: tessera scan --config examples/ --format sarif --output results.sarif
+      - uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: results.sarif
+```
+
+### Pre-commit Hook
+Add to `.pre-commit-config.yaml`:
+```yaml
+repos:
+  - repo: https://github.com/Devaretanmay/TESSERA
+    rev: v2.0.0
+    hooks:
+      - id: tessera-scan
+```
+
+## LLM Analysis (Optional)
+
+TESSERA supports optional LLM-powered analysis for deeper semantic understanding:
+
+```python
+# OpenAI
+scanner.enable_llm({"provider": "openai", "model": "gpt-4"})
+
+# Anthropic
+scanner.enable_llm({"provider": "anthropic", "model": "claude-3-opus"})
+
+# Ollama (local)
+scanner.enable_llm({"provider": "ollama", "model": "llama2"})
+```
+
+Set environment variables:
+- `OPENAI_API_KEY`
+- `ANTHROPIC_API_KEY`
+
+## CFPE Patterns (10 rules)
+
+| ID | Pattern | Severity | Description |
+|----|---------|----------|-------------|
+| CFPE-0001 | RAG to Tool | HIGH | LLM → RAG → Tool chain |
+| CFPE-0002 | Memory Poisoning | CRITICAL | Write to persistent memory |
+| CFPE-0003 | External to Database | HIGH | Untrusted → database |
+| CFPE-0004 | Trust Boundary Bypass | HIGH | Cross-boundary untrusted flow |
+| CFPE-0005 | Multi-hop Attack Chain | HIGH | 3+ edge attack path |
+| CFPE-0006 | Tool to Tool Chaining | MEDIUM | Tool calls tool |
+| CFPE-0007 | Sensitive Data Exfiltration | CRITICAL | LLM → external service |
+| CFPE-0008 | RAG Context Injection | HIGH | User → RAG injection |
+| CFPE-0009 | MCP Config Attack | HIGH | Malicious MCP server |
+| CFPE-0010 | Agent Skill Injection | HIGH | SKILL.md compromise |
+
+## Node Types
+
+- `user` - Human input source
+- `llm` / `model` - Language model
+- `api` - API gateway
+- `tool` - External tool/service
+- `database` - Database
+- `memory_store` - Persistent memory
+- `rag_corpus` - Knowledge base (RAG)
+- `external_service` - External API/service
+- `mcp_server` - MCP server
+- `skill` - Agent skill definition
+
+## Trust Boundaries
+
+```
+external → user_controlled → partially_trusted → internal → privileged
 ```
 
 ## Architecture
 
 ```
 src/tessera/
-├── core/                    # Domain logic
-│   ├── topology/           # Graph models
-│   ├── detection/          # CFPE rules
-│   └── findings/           # Finding models
-├── engine/                 # Pipeline
-├── infra/                   # API & DB
-└── interfaces/             # CLI
+├── core/                      # Domain logic
+│   ├── topology/            # Graph models (Graph, Node, Edge)
+│   ├── detection/            # CFPE rules (10 patterns)
+│   └── findings/             # Finding models
+├── engine/                   # Scanner engine (Tesseract)
+├── infra/
+│   ├── output/              # Formatters (JSON, SARIF, Text, HTML)
+│   ├── llm/                 # LLM providers (OpenAI, Anthropic, Ollama)
+│   └── mcp/                 # MCP server
+└── interfaces/
+    └── cli/                  # CLI commands
 ```
 
-## CFPE Patterns
+## Testing
 
-| ID | Pattern | Severity |
-|----|---------|----------|
-| CFPE-0001 | RAG to Tool | HIGH |
-| CFPE-0002 | Memory Poisoning | CRITICAL |
-| CFPE-0004 | Trust Boundary Bypass | HIGH |
+Run examples:
 
-## Node Types
+```bash
+# All examples
+tessera scan --config examples/*.yaml
 
-- `user` - Human input
-- `llm` - Language model
-- `api` - API gateway
-- `tool` - External tool
-- `database` - Database
-- `memory_store` - Memory
-- `rag_corpus` - Knowledge base
-- `external_service` - External service
+# Specific example
+tessera scan --config examples/complex_agent.yaml --format json
+```
 
-## Trust Boundaries
+## Environment Variables
 
-`external` → `user_controlled` → `partially_trusted` → `internal` → `privileged`
+| Variable | Description |
+|----------|-------------|
+| `OPENAI_API_KEY` | OpenAI API key for LLM analysis |
+| `ANTHROPIC_API_KEY` | Anthropic API key for LLM analysis |
 
 ## License
 

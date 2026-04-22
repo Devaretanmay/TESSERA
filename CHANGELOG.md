@@ -2,43 +2,52 @@
 
 All notable changes to TESSERA will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
-## [1.1.0] - 2026-04-22
+## [2.0.0] - 2026-04-22
 
 ### Added
-- **TESSERA-RDT**: Recurrent-Depth Transformer for ML-based compound attack detection
-  - Node/Edge encoders for graph topology
-  - Sparse MoE for diverse vulnerability patterns
-  - LTI stability for stable training
-  - Adaptive Computation Time (ACT) for dynamic reasoning depth
-  - RDTScanner for inference
-- Model weights in data/ directory
+- **10 CFPE Detection Patterns** (up from 3)
+  - CFPE-0007: Sensitive Data Exfiltration (CRITICAL)
+  - CFPE-0008: RAG Context Injection (HIGH)
+  - CFPE-0009: MCP Config Attack (HIGH)
+  - CFPE-0010: Agent Skill Injection (HIGH)
+- **HTML Output Formatter** - Beautiful styled HTML reports
+- **LLM Integration** - Optional AI-powered semantic analysis
+  - OpenAI provider (gpt-4, gpt-3.5-turbo)
+  - Anthropic provider (claude-3-opus, claude-3-sonnet)
+  - Ollama provider (local models)
+- **Pre-commit Hook** - Local security scanning
+- **MCP Server Stub** - Model Context Protocol support
+- **GitHub Actions Workflow** - CI/CD integration
+- **Remediation Guidance** - Every finding includes fix instructions
 
 ### Changed
-- RDT module added: `src/tessera/rdt/`
-
-## [1.0.3] - 2026-04-17
-
-### Added
-- Clean production architecture: core/engine/infra/interfaces separation
-- CFPE-0001: RAG to Tool chain detection
-- CFPE-0002: Memory poisoning detection  
-- CFPE-0004: Trust boundary bypass detection
-- SQLite persistence for scan history
-- FastAPI server with API key authentication
-- CLI with scan, topology, findings, scans, server commands
+- Scanner now returns structured results with severity counts
+- SARIF output upgraded to v2.1.0
+- All CFPE patterns include remediation guidance
+- CLI rewritten with Typer for better UX
 
 ### Fixed
-- Detection patterns logic corrected
-- Partial scan ID resolution for findings command
-- Database persistence (was dropping tables on init)
+- Error handling for missing files
+- Graceful degradation when LLM unavailable
 
-### Changed
-- Restructured from prototype to production layout
-- Removed experimental/dead code
+## [1.0.0] - 2026-04-XX
 
-## [1.0.0] - [YANKED]
+### Added
+- Initial release
+- 3 CFPE detection patterns
+- Basic CLI
+- JSON output
 
-Initial release - no longer available.
+---
+
+## Installation
+
+```bash
+pip install tessera-security
+```
+
+## Upgrading
+
+```bash
+pip install --upgrade tessera-security
+```
