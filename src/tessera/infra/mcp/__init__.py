@@ -45,7 +45,6 @@ class ScanTool:
     def execute(self, topology_yaml: str, format: str = "json") -> dict:
         """Execute the scan."""
         from tessera.core.topology.loader import Loader
-        from io import StringIO
 
         # Load topology from YAML string
         loader = Loader()

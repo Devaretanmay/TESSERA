@@ -3,7 +3,7 @@ Canonical finding model.
 """
 
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import Enum
 
 
@@ -45,7 +45,7 @@ class Finding:
     confidence: float = 0.5
     cve_refs: list[str] = field(default_factory=list)
     owasp_mapping: list[str] = field(default_factory=list)
-    created_at: str = field(default_factory=lambda: datetime.utcnow().isoformat())
+    created_at: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
 
     def to_dict(self) -> dict:
         return {

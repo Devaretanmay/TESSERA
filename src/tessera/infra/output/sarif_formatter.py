@@ -5,9 +5,7 @@ SARIF (Static Analysis Results Interchange Format) is the standard
 format for security scanning tools to integrate with GitHub Code Scanning.
 """
 
-import uuid
 from datetime import datetime, timezone
-from typing import Any
 
 from tessera.infra.output.base import OutputFormatter, ScanResult
 
@@ -217,7 +215,7 @@ class SarifFormatter(OutputFormatter):
                 locations.append(
                     {
                         "physicalLocation": {
-                            "artifactLocation": {"uri": f"topology.yaml", "uriBaseId": "ROOT"},
+                            "artifactLocation": {"uri": "topology.yaml", "uriBaseId": "ROOT"},
                             "region": {"startLine": 1, "snippet": {"text": edge}},
                         },
                         "message": {"text": f"Edge: {edge}"},

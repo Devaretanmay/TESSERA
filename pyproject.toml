@@ -21,6 +21,7 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 keywords = ["security", "ai", "llm", "agent", "vulnerability", "gnn"]
+urls = {Homepage = "https://github.com/Devaretanmay/TESSERA", Documentation = "https://github.com/Devaretanmay/TESSERA/tree/main/docs", Source = "https://github.com/Devaretanmay/TESSERA", Issues = "https://github.com/Devaretanmay/TESSERA/issues"}
 dependencies = [
     "pydantic>=2.5.0",
     "typer>=0.12.0",
@@ -33,6 +34,9 @@ dev = [
     "pytest>=8.0.0",
     "pytest-asyncio>=0.23.0",
     "ruff>=0.1.0",
+    "build>=1.2.0",
+    "twine>=5.0.0",
+    "pip-audit>=2.7.0",
 ]
 api = [
     "fastapi>=0.109.0",

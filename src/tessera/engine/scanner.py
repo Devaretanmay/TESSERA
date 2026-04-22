@@ -4,18 +4,22 @@ TESSERA Scanner Engine v2.0
 Provides the main scanning interface with multiple output format support.
 """
 
+import json
+import logging
 import time
 from enum import Enum
-from typing import Any
 
 from tessera.core.topology.models import Graph
 from tessera.core.topology.loader import Loader
-from tessera.core.detection.patterns import detect, detect_as_dicts
+from tessera.core.detection.patterns import detect
 from tessera.infra.output.base import ScanResult
 from tessera.infra.output.sarif_formatter import SarifFormatter
 from tessera.infra.output.json_formatter import JsonFormatter
 from tessera.infra.output.text_formatter import TextFormatter
 from tessera.infra.output.html_formatter import HtmlFormatter
+
+
+logger = logging.getLogger("tessera.scanner")
 
 
 class OutputFormat(str, Enum):
@@ -106,6 +110,7 @@ class Tesseract:
         output_format: OutputFormat = OutputFormat.TEXT,
         include_remediation: bool = True,
         llm_enabled: bool = False,
+        output_path: str | None = None,
     ) -> str | dict:
         """Scan a topology.
 
@@ -114,40 +119,31 @@ class Tesseract:
             output_format: Output format (json, sarif, text)
             include_remediation: Include remediation guidance
             llm_enabled: Enable LLM analysis
+            output_path: Optional path to write output file
 
         Returns:
             Formatted scan results
         """
-        # Load topology if path string
-        if isinstance(topology, str):
-            loader = Loader()
-            topology = loader.load(topology)
-
-        # Run detection
-        start_time = time.time_ns()
-        findings = detect(topology)
-        scan_time_ns = time.time_ns() - start_time
-
-        # Convert to dicts for formatters
-        findings_dicts = [f.to_dict() for f in findings]
-
-        # LLM-powered false positive filtering
-        if llm_enabled and self._llm_enabled and self._llm_provider:
-            findings_dicts = self._llm_filter_findings(findings_dicts, topology)
-
-        # Create result
-        result = ScanResult(
-            system=topology.system,
-            version=topology.version,
-            findings=findings_dicts,
-            scan_time_ns=scan_time_ns,
-            graph_nodes=len(topology.nodes),
-            graph_edges=len(topology.edges),
+        if isinstance(output_format, str):
+            output_format = OutputFormat(output_format.lower())
+        result = self.build_scan_result(
+            topology,
+            include_remediation=include_remediation,
+            llm_enabled=llm_enabled,
         )
 
         # Format output
         formatter = self.formatters.get(output_format, self.formatters[OutputFormat.TEXT])
         output = formatter.format(result)
+
+        # Write to file if path provided
+        if output_path:
+            import pathlib
+
+            pathlib.Path(output_path).write_text(
+                output if isinstance(output, str) else json.dumps(output, indent=2),
+                encoding="utf-8",
+            )
 
         return output
 
@@ -157,20 +153,7 @@ class Tesseract:
             return findings
 
         try:
-            # Convert topology to dict
-            topology_dict = {
-                "system": topology.system,
-                "version": topology.version,
-                "nodes": [
-                    {"id": n.id, "type": n.type, "trust_boundary": n.trust_boundary.value}
-                    for n in topology.nodes.values()
-                ],
-                "edges": [
-                    {"from": e.from_node, "to": e.to_node, "data_flow": e.data_flow.value}
-                    for e in topology.edges
-                ],
-            }
-
+            topology_dict = self._topology_to_dict(topology)
             return self._llm_provider.filter_false_positives(findings, topology_dict)
         except Exception:
             # Return original findings on error
@@ -192,60 +175,27 @@ class Tesseract:
         Returns:
             Dict with scan results and LLM analysis
         """
-        # Load topology if path string
-        if isinstance(topology, str):
-            loader = Loader()
-            topology = loader.load(topology)
-
-        # Run detection
-        start_time = time.time_ns()
-        findings = detect(topology)
-        scan_time_ns = time.time_ns() - start_time
-
-        # Convert to dicts
-        findings_dicts = [f.to_dict() for f in findings]
+        if isinstance(output_format, str):
+            output_format = OutputFormat(output_format.lower())
+        topology_obj = self._load_topology(topology)
+        result = self.build_scan_result(
+            topology_obj,
+            include_remediation=include_remediation,
+            llm_enabled=self._llm_enabled,
+        )
 
         # LLM analysis
         llm_assessment = None
         if self._llm_enabled and self._llm_provider:
-            # Filter false positives
-            findings_dicts = self._llm_filter_findings(findings_dicts, topology)
-
             # Get semantic risk assessment
             try:
-                topology_dict = {
-                    "system": topology.system,
-                    "version": topology.version,
-                    "nodes": [
-                        {
-                            "id": n.id,
-                            "type": n.type,
-                            "trust_boundary": n.trust_boundary.value,
-                        }
-                        for n in topology.nodes.values()
-                    ],
-                    "edges": [
-                        {
-                            "from": e.from_node,
-                            "to": e.to_node,
-                            "data_flow": e.data_flow.value,
-                        }
-                        for e in topology.edges
-                    ],
-                }
+                topology_dict = self._topology_to_dict(topology_obj)
                 llm_assessment = self._llm_provider.assess_risk(topology_dict)
-            except Exception:
-                pass
-
-        # Create result
-        result = ScanResult(
-            system=topology.system,
-            version=topology.version,
-            findings=findings_dicts,
-            scan_time_ns=scan_time_ns,
-            graph_nodes=len(topology.nodes),
-            graph_edges=len(topology.edges),
-        )
+            except Exception as exc:
+                logger.warning(
+                    "LLM assessment failed",
+                    extra={"fields": {"error_code": "llm_assessment_failed", "error": str(exc)}},
+                )
 
         formatter = self.formatters.get(output_format, self.formatters[OutputFormat.JSON])
         formatted = formatter.format(result)
@@ -268,6 +218,7 @@ class Tesseract:
         topology: Graph | str,
         output_format: OutputFormat = OutputFormat.JSON,
         llm_enabled: bool = False,
+        include_remediation: bool = True,
     ) -> dict:
         """Scan and return as dict (for programmatic use).
 
@@ -275,11 +226,99 @@ class Tesseract:
             topology: Graph object or path to YAML file
             output_format: Output format
             llm_enabled: Enable LLM analysis
+            include_remediation: Include remediation guidance
 
         Returns:
             Dict for further processing
         """
-        return self.scan(topology, output_format, llm_enabled=llm_enabled)
+        result = self.scan(
+            topology,
+            output_format,
+            include_remediation=include_remediation,
+            llm_enabled=llm_enabled,
+        )
+        if not isinstance(result, dict):
+            raise ValueError("scan_to_dict requires a dict-producing output format")
+        return result
+
+    def build_scan_result(
+        self,
+        topology: Graph | str,
+        *,
+        include_remediation: bool = True,
+        llm_enabled: bool = False,
+    ) -> ScanResult:
+        """Build a canonical structured scan result before formatting."""
+        topology_obj = self._load_topology(topology)
+        start_time = time.time_ns()
+        findings = detect(topology_obj)
+        scan_time_ns = time.time_ns() - start_time
+        findings_dicts = self._prepare_findings(findings, include_remediation)
+        if llm_enabled and self._llm_enabled and self._llm_provider:
+            findings_dicts = self._llm_filter_findings(findings_dicts, topology_obj)
+        findings_dicts = self._deduplicate_findings(findings_dicts)
+        result = ScanResult(
+            system=topology_obj.system,
+            version=topology_obj.version,
+            findings=findings_dicts,
+            scan_time_ns=scan_time_ns,
+            graph_nodes=len(topology_obj.nodes),
+            graph_edges=len(topology_obj.edges),
+        )
+        logger.info(
+            "Scan completed",
+            extra={
+                "fields": {
+                    "system": result.system,
+                    "finding_count": len(result.findings),
+                    "duration_ms": round(result.scan_time_ns / 1_000_000, 3),
+                }
+            },
+        )
+        return result
+
+    def _load_topology(self, topology: Graph | str) -> Graph:
+        if isinstance(topology, str):
+            return Loader().load(topology)
+        return topology
+
+    def _topology_to_dict(self, topology: Graph) -> dict:
+        return {
+            "system": topology.system,
+            "version": topology.version,
+            "nodes": [
+                {"id": n.id, "type": n.type, "trust_boundary": n.trust_boundary.value}
+                for n in topology.nodes.values()
+            ],
+            "edges": [
+                {"from": e.from_node, "to": e.to_node, "data_flow": e.data_flow.value}
+                for e in topology.edges
+            ],
+        }
+
+    def _prepare_findings(self, findings: list, include_remediation: bool) -> list[dict]:
+        findings_dicts = [f.to_dict() for f in findings]
+        if include_remediation:
+            return findings_dicts
+        for finding in findings_dicts:
+            finding["remediation"] = {}
+        return findings_dicts
+
+    def _deduplicate_findings(self, findings: list[dict]) -> list[dict]:
+        deduplicated = []
+        seen_keys = set()
+        for finding in findings:
+            key = (
+                finding.get("id", ""),
+                finding.get("severity", ""),
+                finding.get("description", ""),
+                tuple(sorted(finding.get("edges", []))),
+            )
+            if key in seen_keys:
+                continue
+            seen_keys.add(key)
+            deduplicated.append(finding)
+        return deduplicated
 
 
 def scan(

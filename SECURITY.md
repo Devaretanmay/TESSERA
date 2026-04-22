@@ -1,37 +1,24 @@
 # Security Policy
 
-## Reporting a Vulnerability
-
-If you find a security vulnerability in TESSERA, please report it responsibly.
-
-**Do NOT:** Open a public GitHub issue for security vulnerabilities.
-
-**DO:** Email security concerns privately to the maintainers.
-
-We aim to acknowledge reports within 48 hours and provide a timeline for fixes.
-
 ## Supported Versions
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 1.0.x   | ✅ Current       |
+TESSERA supports security fixes for the latest release line on supported Python versions (`3.10`-`3.12`).
 
-Older versions may not be supported - please upgrade.
+## Reporting a Vulnerability
 
-## Security Best Practices When Using TESSERA
+Please report vulnerabilities privately to the maintainer email listed in `pyproject.toml` or through GitHub Security Advisories if enabled.
 
-1. **Local scanning only** - TESSERA scans local topology files; never expose scan endpoints publicly
-2. **API keys** - Use strong API keys (16+ characters) for server endpoints
-3. **Database** - The local SQLite database (`~/.tessera/scans.db`) contains scan metadata; protect accordingly
-4. **Topology files** - Treat your topology YAML files as sensitive - they document your system's architecture
+When reporting, include:
 
-## Scope
+- affected version
+- reproduction steps
+- impact assessment
+- any proof-of-concept material
 
-TESSERA is a static analysis tool for topology graphs. It does NOT:
-- Execute code from scanned systems
-- Make network requests to target systems
-- Store credentials remotely
+Do not open public issues for undisclosed vulnerabilities.
 
-## Credit
+## Security Expectations
 
-We appreciate responsible disclosure and will credit reporters in fixes (if desired).
+- Public releases are published through PyPI Trusted Publishing only.
+- API bearer tokens must be stored as SHA-256 hashes via `TESSERA_API_KEYS_JSON`.
+- TLS termination is required for public API deployments.

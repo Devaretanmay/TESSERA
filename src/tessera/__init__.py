@@ -2,7 +2,7 @@
 __version__ = "2.0.0"
 
 from tessera.core.topology.models import Graph, Node, Edge, TrustBoundary, DataFlow
-from tessera.core.findings.models import Finding, FindingSeverity, FailureType
+from tessera.core.detection.rules import Finding, Severity as FindingSeverity, Category as FailureType
 from tessera.core.detection.patterns import detect, detect_as_dicts
 from tessera.infra.output import SarifFormatter, JsonFormatter, TextFormatter, HtmlFormatter
 from tessera.infra.output.sarif_formatter import format_to_sarif
@@ -14,6 +14,7 @@ from tessera.infra.llm import (
     LLMProvider,
     LLMConfig,
     RiskAssessment,
+    ProviderType,
     create_provider,
     get_available_providers,
 )
@@ -51,6 +52,7 @@ __all__ = [
     "LLMProvider",
     "LLMConfig",
     "RiskAssessment",
+    "ProviderType",
     "create_provider",
     "get_available_providers",
 ]

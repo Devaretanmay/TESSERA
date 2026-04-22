@@ -3,7 +3,7 @@ Detection engine - orchestrates rule evaluation.
 """
 
 from tessera.core.topology.models import Graph
-from tessera.core.detection.patterns import detect, Finding
+from tessera.core.detection.rules import detect, Finding
 
 
 class DetectionEngine:

@@ -2,8 +2,6 @@
 JSON output formatter for TESSERA.
 """
 
-from typing import Any
-
 from tessera.infra.output.base import OutputFormatter, ScanResult
 
 

@@ -9,6 +9,8 @@ AI Security Scanner for Compound Attack Chain Detection
 
 TESSERA detects compound attack chains in AI/Agent systems using **CFPE Rules** - rule-based detection of known vulnerability patterns. It also supports optional **LLM-powered analysis** for semantic vulnerability detection.
 
+The primary production surface is the public Python package and CLI. The FastAPI service is supported as a secondary deployment target for container-on-VM environments behind a reverse proxy.
+
 ## Features
 
 - **10 CFPE Detection Patterns** - Comprehensive coverage of AI agent vulnerabilities
@@ -30,6 +32,13 @@ git clone https://github.com/Devaretanmay/TESSERA.git
 cd TESSERA
 pip install -e .
 ```
+
+## Support Matrix
+
+- Supported Python versions: `3.10`, `3.11`, `3.12`
+- Operational default: `3.11`
+- Package + CLI are the primary supported production surface
+- FastAPI is a secondary production surface
 
 ## Quick Start
 
@@ -150,19 +159,22 @@ tessera scan --config my_agent.yaml --format html --output report.html
 
 ### GitHub Actions
 ```yaml
-name: TESSERA Security Scan
+name: CI
 on: [push, pull_request]
 
 jobs:
-  tessera:
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - run: pip install tessera-security
-      - run: tessera scan --config examples/ --format sarif --output results.sarif
-      - uses: github/codeql-action/upload-sarif@v4
+      - uses: actions/setup-python@v5
         with:
-          sarif_file: results.sarif
+          python-version: "3.11"
+      - run: pip install -e ".[dev,api]"
+      - run: python -m ruff check src tests
+      - run: python -m pytest -q
+      - run: python -m build
+      - run: python -m twine check dist/*
 ```
 
 ### Pre-commit Hook
@@ -244,6 +256,15 @@ src/tessera/
 └── interfaces/
     └── cli/                  # CLI commands
 ```
+
+## Production Docs
+
+- [Deployment Guide](docs/DEPLOYMENT.md)
+- [Environment Reference](docs/ENVIRONMENT.md)
+- [Release Playbook](docs/RELEASE_PLAYBOOK.md)
+- [Support Matrix](docs/SUPPORT_MATRIX.md)
+- [Incident Runbook](docs/INCIDENT_RUNBOOK.md)
+- [Security Policy](SECURITY.md)
 
 ## Testing
 

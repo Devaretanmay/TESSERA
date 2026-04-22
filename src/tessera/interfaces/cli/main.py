@@ -3,21 +3,25 @@ CLI entry point for TESSERA.
 """
 
 from pathlib import Path
-import typer
 import json
+import os
+
+import typer
 
 from tessera.core.topology.loader import ValidationError, Loader
 from tessera.engine.scanner import Tesseract, OutputFormat
+from tessera.infra.logging_utils import configure_logging
 
+configure_logging(level=os.getenv("TESSERA_LOG_LEVEL", "WARNING"), json_logs=False)
 app = typer.Typer(help="TESSERA - AI Security Scanner")
 
 
 @app.command()
 def scan(
     config: Path = typer.Option(..., exists=True, help="Topology YAML file"),
-    format: str = typer.Option("text", help="Output format: text, json, sarif"),
+    format: str = typer.Option("text", help="Output format: text, json, sarif, html"),
     llm: bool = typer.Option(False, help="Enable LLM analysis"),
-    output: Path = typer.Option(None, help="Output file (optional)"),
+    output: Path | None = typer.Option(None, help="Output file (optional)"),
 ):
     """Scan a topology file for security vulnerabilities."""
     try:
@@ -33,27 +37,32 @@ def scan(
 
         # Output
         if output:
-            if format == "json" or format == "sarif":
-                with open(output, "w") as f:
+            if format_enum in {OutputFormat.JSON, OutputFormat.SARIF}:
+                with output.open("w", encoding="utf-8") as f:
                     json.dump(result, f, indent=2)
                 typer.echo(f"Results written to {output}")
             else:
-                with open(output, "w") as f:
+                with output.open("w", encoding="utf-8") as f:
                     f.write(result)
                 typer.echo(f"Results written to {output}")
         else:
-            if format == "json" or format == "sarif":
+            if format_enum in {OutputFormat.JSON, OutputFormat.SARIF}:
                 typer.echo(json.dumps(result, indent=2))
             else:
                 typer.echo(result)
 
         # Summary
-        if format == "json" and isinstance(result, dict):
+        if format_enum == OutputFormat.JSON and isinstance(result, dict):
             summary = result.get("summary", {})
             typer.echo(f"\nTotal findings: {summary.get('total', 0)}")
 
-        raise typer.Exit(0)
+        return
 
+    except typer.Exit:
+        raise
+    except (ValidationError, ValueError) as e:
+        typer.echo(f"Error: {e}", err=True)
+        raise typer.Exit(1)
     except Exception as e:
         typer.echo(f"Error: {e}", err=True)
         raise typer.Exit(1)
@@ -109,7 +118,7 @@ def explain(
 
             if hasattr(rule, "remediation"):
                 rem = rule.remediation
-                typer.echo(f"\nRemediation:")
+                typer.echo("\nRemediation:")
                 typer.echo(f"  Summary: {rem.get('summary', 'N/A')}")
                 typer.echo(f"  How to fix:\n{rem.get('how_to_fix', 'N/A')}")
                 refs = rem.get("references", [])

@@ -102,7 +102,7 @@ class TextFormatter(OutputFormatter):
                 lines.append(f"   Category: {category}")
 
             if edges:
-                lines.append(f"   Affected edges:")
+                lines.append("   Affected edges:")
                 for edge in edges:
                     lines.append(f"     - {edge}")
 
@@ -112,7 +112,8 @@ class TextFormatter(OutputFormatter):
                 how_to_fix = remediation.get("how_to_fix", "")
                 if how_to_fix:
                     lines.append(f"   {self.BOLD}Remediation:{self.RESET}")
-                    lines.append(f"   {how_to_fix}")
+                    for step in str(how_to_fix).splitlines():
+                        lines.append(f"   {step}")
 
         return "\n".join(lines)
 

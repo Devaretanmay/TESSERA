@@ -3,11 +3,11 @@ Anthropic Claude LLM provider implementation.
 """
 
 import os
-from typing import Any
 
 from tessera.infra.llm.base import (
-    LLMProvider,
     LLMConfig,
+    LLMError,
+    LLMProvider,
     LLMUnavailableError,
     RiskAssessment,
     RiskLevel,
@@ -133,7 +133,7 @@ Return JSON with ids of findings that are likely FALSE POSITIVES:
         try:
             data = json.loads(response)
             return RiskAssessment(
-                risk_level=RiskLevel(data.get("risk_level", "low")),
+                risk_level=self._parse_risk_level(data.get("risk_level", "low")),
                 confidence=float(data.get("confidence", 0.5)),
                 explanation=data.get("explanation", ""),
                 findings=data.get("findings", []),
@@ -145,13 +145,13 @@ Return JSON with ids of findings that are likely FALSE POSITIVES:
                 try:
                     data = json.loads(match.group())
                     return RiskAssessment(
-                        risk_level=RiskLevel(data.get("risk_level", "low")),
+                        risk_level=self._parse_risk_level(data.get("risk_level", "low")),
                         confidence=float(data.get("confidence", 0.5)),
                         explanation=data.get("explanation", response),
                         findings=data.get("findings", []),
                         recommendations=data.get("recommendations", []),
                     )
-                except:
+                except (json.JSONDecodeError, ValueError, TypeError):
                     pass
 
             return RiskAssessment(
@@ -175,7 +175,14 @@ Return JSON with ids of findings that are likely FALSE POSITIVES:
                     data = json.loads(match.group())
                     fp_ids = data.get("false_positive_ids", [])
                     return [f for f in original if f.get("id") not in fp_ids]
-                except:
+                except (json.JSONDecodeError, ValueError, TypeError):
                     pass
 
         return original
+
+    @staticmethod
+    def _parse_risk_level(raw: str) -> RiskLevel:
+        try:
+            return RiskLevel(str(raw).lower())
+        except ValueError:
+            return RiskLevel.LOW

@@ -2,6 +2,8 @@
 HTML output formatter for TESSERA.
 """
 
+from html import escape
+
 from tessera.infra.output.base import OutputFormatter, ScanResult
 
 
@@ -29,6 +31,8 @@ class HtmlFormatter(OutputFormatter):
 
     def _html_header(self, result: ScanResult) -> str:
         """HTML header with styling."""
+        system = escape(result.system)
+        version = escape(result.version)
         return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -69,7 +73,7 @@ class HtmlFormatter(OutputFormatter):
     <div class="header">
         <h1>🛡️ TESSERA Security Scan Report</h1>
         <div class="meta">
-            System: {result.system} | Version: {result.version} | 
+            System: {system} | Version: {version} | 
             Graph: {result.graph_nodes} nodes, {result.graph_edges} edges | 
             Scan time: {result.scan_time_ns / 1_000_000:.2f}ms
         </div>
@@ -115,9 +119,10 @@ class HtmlFormatter(OutputFormatter):
 
         for i, finding in enumerate(findings, 1):
             severity = finding.get("severity", "info").lower()
-            finding_id = finding.get("id", "UNKNOWN")
-            description = finding.get("description", "")
-            category = finding.get("category", "")
+            severity_class = severity if severity in {"critical", "high", "medium", "low"} else "info"
+            finding_id = escape(finding.get("id", "UNKNOWN"))
+            description = escape(finding.get("description", ""))
+            category = escape(finding.get("category", ""))
             edges = finding.get("edges", [])
             remediation = finding.get("remediation", {})
 
@@ -125,7 +130,7 @@ class HtmlFormatter(OutputFormatter):
     <div class="finding">
         <div class="header">
             <span class="id">{i}. {finding_id}</span>
-            <span class="severity {severity}">{severity}</span>
+            <span class="severity {severity_class}">{escape(severity)}</span>
         </div>
         <div class="description">{description}</div>
 """
@@ -136,11 +141,11 @@ class HtmlFormatter(OutputFormatter):
                 html += "        <div><strong>Affected edges:</strong></div>\n"
                 html += '        <div class="edges">\n'
                 for edge in edges:
-                    html += f"          {edge}<br>\n"
+                    html += f"          {escape(edge)}<br>\n"
                 html += "        </div>\n"
 
             if remediation:
-                how_to_fix = remediation.get("how_to_fix", "")
+                how_to_fix = escape(remediation.get("how_to_fix", ""))
                 if how_to_fix:
                     html += f"""
         <div class="remediation">

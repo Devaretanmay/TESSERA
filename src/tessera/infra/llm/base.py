@@ -5,7 +5,6 @@ Base LLM provider interface and models.
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any
 
 
 class RiskLevel(str, Enum):
