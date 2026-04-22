@@ -1,80 +1,143 @@
 """
-Scanner engine - pipeline orchestration.
+TESSERA Scanner Engine v2.0
+
+Provides the main scanning interface with multiple output format support.
 """
 
-import uuid
-from tessera.core.topology.loader import Loader, ValidationError
+import time
+from enum import Enum
+from typing import Any
+
 from tessera.core.topology.models import Graph
-from tessera.core.detection.rule_engine import DetectionEngine
-from tessera.core.findings.models import Finding, FindingSeverity, FailureType
-from tessera.infra.db.repository import Repository, ScanRecord
+from tessera.core.topology.loader import Loader
+from tessera.core.detection.patterns import detect, detect_as_dicts
+from tessera.infra.output.base import ScanResult
+from tessera.infra.output.sarif_formatter import SarifFormatter
+from tessera.infra.output.json_formatter import JsonFormatter
+from tessera.infra.output.text_formatter import TextFormatter
 
 
-class PipelineError(Exception):
-    pass
+class OutputFormat(str, Enum):
+    """Supported output formats."""
+
+    JSON = "json"
+    SARIF = "sarif"
+    TEXT = "text"
 
 
-class Scanner:
-    def __init__(self, repo: Repository | None = None):
-        self.loader = Loader()
-        self.engine = DetectionEngine()
-        self.repo = repo or Repository()
+class Tesseract:
+    """Main TESSERA scanner class."""
 
-    def run(
+    def __init__(self, config: dict | None = None):
+        """Initialize scanner.
+
+        Args:
+            config: Optional configuration dict
+        """
+        self.config = config or {}
+        self.formatters = {
+            OutputFormat.JSON: JsonFormatter(),
+            OutputFormat.SARIF: SarifFormatter(),
+            OutputFormat.TEXT: TextFormatter(),
+        }
+
+    def scan(
         self,
-        topology_path: str,
-        tier: str = "2",
-        system: str = "unknown",
-    ) -> tuple[str, list[Finding]]:
-        scan_id = str(uuid.uuid4())
+        topology: Graph | str,
+        output_format: OutputFormat = OutputFormat.TEXT,
+        include_remediation: bool = True,
+    ) -> str | dict:
+        """Scan a topology.
 
-        try:
-            graph = self._load(topology_path)
-            self._validate(graph)
-            findings = self._detect(graph)
-            results = self._build_findings(scan_id, findings)
-            self._persist(scan_id, system, tier, results)
+        Args:
+            topology: Graph object or path to YAML file
+            output_format: Output format (json, sarif, text)
+            include_remediation: Include remediation guidance
 
-            return scan_id, results
+        Returns:
+            Formatted scan results
+        """
+        # Load topology if path string
+        if isinstance(topology, str):
+            loader = Loader()
+            topology = loader.load(topology)
 
-        except ValidationError as e:
-            raise PipelineError(f"Validation failed: {e}") from e
+        # Run detection
+        start_time = time.time_ns()
+        findings = detect(topology)
+        scan_time_ns = time.time_ns() - start_time
 
-    def _load(self, path: str) -> Graph:
-        return self.loader.load(path)
+        # Convert to dicts for formatters
+        findings_dicts = [f.to_dict() for f in findings]
 
-    def _validate(self, graph: Graph) -> None:
-        if not graph.nodes:
-            raise ValidationError("Graph has no nodes")
-        if not graph.edges:
-            raise ValidationError("Graph has no edges")
+        # Create result
+        result = ScanResult(
+            system=topology.system,
+            version=topology.version,
+            findings=findings_dicts,
+            scan_time_ns=scan_time_ns,
+            graph_nodes=len(topology.nodes),
+            graph_edges=len(topology.edges),
+        )
 
-        for edge in graph.edges:
-            if edge.from_node not in graph.nodes:
-                raise ValidationError(f"Edge references missing node: {edge.from_node}")
-            if edge.to_node not in graph.nodes:
-                raise ValidationError(f"Edge references missing node: {edge.to_node}")
+        # Format output
+        formatter = self.formatters.get(output_format, self.formatters[OutputFormat.TEXT])
+        output = formatter.format(result)
 
-    def _detect(self, graph: Graph) -> list:
-        return self.engine.scan(graph)
+        return output
 
-    def _build_findings(self, scan_id: str, detections: list) -> list[Finding]:
-        findings = []
-        for det in detections:
-            finding = Finding(
-                finding_id=str(uuid.uuid4()),
-                scan_id=scan_id,
-                severity=FindingSeverity(det.severity.value),
-                failure_type=FailureType(det.category.value),
-                topology_path=det.edges,
-                evidence={"indicators": det.indicators},
-                remediation={"description": det.description},
-            )
-            findings.append(finding)
-        return findings
+    def scan_to_dict(
+        self, topology: Graph | str, output_format: OutputFormat = OutputFormat.JSON
+    ) -> dict:
+        """Scan and return as dict (for programmatic use).
 
-    def _persist(self, scan_id: str, system: str, tier: str, findings: list[Finding]) -> None:
-        scan = ScanRecord(scan_id=scan_id, system=system, tier=tier, status="completed")
-        self.repo.save_scan(scan)
-        for finding in findings:
-            self.repo.save_finding(finding)
+        Args:
+            topology: Graph object or path to YAML file
+            output_format: Output format
+
+        Returns:
+            Dict for further processing
+        """
+        if isinstance(topology, str):
+            loader = Loader()
+            topology = loader.load(topology)
+
+        start_time = time.time_ns()
+        findings = detect(topology)
+        scan_time_ns = time.time_ns() - start_time
+        findings_dicts = [f.to_dict() for f in findings]
+
+        result = ScanResult(
+            system=topology.system,
+            version=topology.version,
+            findings=findings_dicts,
+            scan_time_ns=scan_time_ns,
+            graph_nodes=len(topology.nodes),
+            graph_edges=len(topology.edges),
+        )
+
+        formatter = self.formatters.get(output_format, self.formatters[OutputFormat.JSON])
+        formatted = formatter.format(result)
+
+        # Always return dict for this method
+        if isinstance(formatted, dict):
+            return formatted
+        return {"text": formatted, "formatted": formatted}
+
+
+def scan(
+    topology: Graph | str, output_format: str = "text", include_remediation: bool = True
+) -> str | dict:
+    """Convenience function for quick scanning.
+
+    Args:
+        topology: Graph object or path to YAML file
+        output_format: Output format (json, sarif, text)
+        include_remediation: Include remediation guidance
+
+    Returns:
+        Formatted scan results
+    """
+    format_enum = OutputFormat(output_format.lower())
+    scanner = Tesseract()
+    return scanner.scan(topology, format_enum, include_remediation)
