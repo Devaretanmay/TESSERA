@@ -9,6 +9,7 @@ from tessera.infra.output.sarif_formatter import format_to_sarif
 from tessera.infra.output.json_formatter import format_to_json
 from tessera.infra.output.text_formatter import format_to_text
 from tessera.engine.scanner import Tesseract, scan, OutputFormat
+from tessera.infra.llm import LLMProvider, LLMConfig, RiskAssessment, create_provider
 
 __all__ = [
     # Version
@@ -37,4 +38,9 @@ __all__ = [
     "Tesseract",
     "scan",
     "OutputFormat",
+    # LLM (optional)
+    "LLMProvider",
+    "LLMConfig",
+    "RiskAssessment",
+    "create_provider",
 ]
