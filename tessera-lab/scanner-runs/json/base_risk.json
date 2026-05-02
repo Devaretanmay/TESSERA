@@ -1,0 +1,228 @@
+{
+  "topology": "base",
+  "risk_score": 3.32,
+  "risk_level": "low",
+  "attack_paths": [
+    {
+      "path": "user_input -> api_gateway -> chat_llm -> payment_api",
+      "chain_length": 4,
+      "boundary_crossings": 2,
+      "risk_factors": [
+        "long_chain",
+        "boundary_crossing",
+        "high_value_target"
+      ],
+      "score": 4.4,
+      "level": "medium"
+    },
+    {
+      "path": "api_gateway -> chat_llm -> payment_api",
+      "chain_length": 3,
+      "boundary_crossings": 2,
+      "risk_factors": [
+        "boundary_crossing",
+        "high_value_target"
+      ],
+      "score": 4.4,
+      "level": "medium"
+    },
+    {
+      "path": "user_input -> api_gateway -> chat_llm -> search_tool",
+      "chain_length": 4,
+      "boundary_crossings": 1,
+      "risk_factors": [
+        "long_chain",
+        "boundary_crossing",
+        "tool_usage"
+      ],
+      "score": 3.2,
+      "level": "low"
+    },
+    {
+      "path": "user_input -> api_gateway -> chat_llm -> http_tool",
+      "chain_length": 4,
+      "boundary_crossings": 1,
+      "risk_factors": [
+        "long_chain",
+        "boundary_crossing",
+        "tool_usage"
+      ],
+      "score": 3.2,
+      "level": "low"
+    },
+    {
+      "path": "api_gateway -> chat_llm -> search_tool",
+      "chain_length": 3,
+      "boundary_crossings": 1,
+      "risk_factors": [
+        "boundary_crossing",
+        "tool_usage"
+      ],
+      "score": 3.2,
+      "level": "low"
+    },
+    {
+      "path": "api_gateway -> chat_llm -> http_tool",
+      "chain_length": 3,
+      "boundary_crossings": 1,
+      "risk_factors": [
+        "boundary_crossing",
+        "tool_usage"
+      ],
+      "score": 3.2,
+      "level": "low"
+    },
+    {
+      "path": "chat_llm -> payment_api",
+      "chain_length": 2,
+      "boundary_crossings": 1,
+      "risk_factors": [
+        "boundary_crossing",
+        "high_value_target"
+      ],
+      "score": 3.2,
+      "level": "low"
+    },
+    {
+      "path": "rag_corpus -> chat_llm -> payment_api",
+      "chain_length": 3,
+      "boundary_crossings": 1,
+      "risk_factors": [
+        "boundary_crossing",
+        "high_value_target"
+      ],
+      "score": 3.2,
+      "level": "low"
+    },
+    {
+      "path": "conversation_history -> chat_llm -> payment_api",
+      "chain_length": 3,
+      "boundary_crossings": 1,
+      "risk_factors": [
+        "boundary_crossing",
+        "high_value_target"
+      ],
+      "score": 3.2,
+      "level": "low"
+    },
+    {
+      "path": "user_input -> api_gateway -> chat_llm -> rag_corpus -> vector_store",
+      "chain_length": 5,
+      "boundary_crossings": 1,
+      "risk_factors": [
+        "long_chain",
+        "boundary_crossing"
+      ],
+      "score": 2.0,
+      "level": "low"
+    },
+    {
+      "path": "chat_llm -> search_tool",
+      "chain_length": 2,
+      "boundary_crossings": 0,
+      "risk_factors": [
+        "tool_usage"
+      ],
+      "score": 2.0,
+      "level": "low"
+    },
+    {
+      "path": "chat_llm -> http_tool",
+      "chain_length": 2,
+      "boundary_crossings": 0,
+      "risk_factors": [
+        "tool_usage"
+      ],
+      "score": 2.0,
+      "level": "low"
+    },
+    {
+      "path": "rag_corpus -> chat_llm -> search_tool",
+      "chain_length": 3,
+      "boundary_crossings": 0,
+      "risk_factors": [
+        "tool_usage"
+      ],
+      "score": 2.0,
+      "level": "low"
+    },
+    {
+      "path": "rag_corpus -> chat_llm -> http_tool",
+      "chain_length": 3,
+      "boundary_crossings": 0,
+      "risk_factors": [
+        "tool_usage"
+      ],
+      "score": 2.0,
+      "level": "low"
+    },
+    {
+      "path": "conversation_history -> chat_llm -> search_tool",
+      "chain_length": 3,
+      "boundary_crossings": 0,
+      "risk_factors": [
+        "tool_usage"
+      ],
+      "score": 2.0,
+      "level": "low"
+    },
+    {
+      "path": "conversation_history -> chat_llm -> http_tool",
+      "chain_length": 3,
+      "boundary_crossings": 0,
+      "risk_factors": [
+        "tool_usage"
+      ],
+      "score": 2.0,
+      "level": "low"
+    },
+    {
+      "path": "user_input -> api_gateway -> chat_llm",
+      "chain_length": 3,
+      "boundary_crossings": 1,
+      "risk_factors": [
+        "boundary_crossing"
+      ],
+      "score": 1.2,
+      "level": "info"
+    },
+    {
+      "path": "user_input -> api_gateway -> chat_llm -> rag_corpus",
+      "chain_length": 4,
+      "boundary_crossings": 1,
+      "risk_factors": [
+        "long_chain",
+        "boundary_crossing"
+      ],
+      "score": 1.2,
+      "level": "info"
+    },
+    {
+      "path": "user_input -> api_gateway -> chat_llm -> conversation_history",
+      "chain_length": 4,
+      "boundary_crossings": 1,
+      "risk_factors": [
+        "long_chain",
+        "boundary_crossing"
+      ],
+      "score": 1.2,
+      "level": "info"
+    },
+    {
+      "path": "api_gateway -> chat_llm",
+      "chain_length": 2,
+      "boundary_crossings": 1,
+      "risk_factors": [
+        "boundary_crossing"
+      ],
+      "score": 1.2,
+      "level": "info"
+    }
+  ],
+  "critical_chains": 0,
+  "boundary_violations": 27,
+  "recommendations": [
+    "Add validation at 27 trust boundary crossing(s)",
+    "Break long attack chains with validation points"
+  ]
+}

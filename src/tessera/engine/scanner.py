@@ -31,22 +31,33 @@ class OutputFormat(str, Enum):
     HTML = "html"
 
 
-class Tesseract:
+class Tessera:
     """Main TESSERA scanner class."""
 
-    def __init__(self, config: dict | None = None):
+    def __init__(
+        self,
+        config: dict | None = None,
+        loader: Loader | None = None,
+        formatters: dict | None = None,
+        llm_factory=None,
+    ):
         """Initialize scanner.
 
         Args:
             config: Optional configuration dict
+            loader: Optional Loader instance (injects testability)
+            formatters: Optional dict of OutputFormat -> OutputFormatter
+            llm_factory: Optional callable to create LLM providers (injects testability)
         """
         self.config = config or {}
-        self.formatters = {
+        self._loader = loader or Loader()
+        self.formatters = formatters or {
             OutputFormat.JSON: JsonFormatter(),
             OutputFormat.SARIF: SarifFormatter(),
             OutputFormat.TEXT: TextFormatter(),
             OutputFormat.HTML: HtmlFormatter(),
         }
+        self._llm_provider_factory = llm_factory
         self._llm_provider = None
         self._llm_enabled = False
         self._llm_config = None
@@ -87,7 +98,10 @@ class Tesseract:
         )
 
         try:
-            self._llm_provider = create_provider(config)
+            if self._llm_provider_factory:
+                self._llm_provider = self._llm_provider_factory(config)
+            else:
+                self._llm_provider = create_provider(config)
             self._llm_enabled = True
             self._llm_config = llm_config
             return True
@@ -279,7 +293,7 @@ class Tesseract:
 
     def _load_topology(self, topology: Graph | str) -> Graph:
         if isinstance(topology, str):
-            return Loader().load(topology)
+            return self._loader.load(topology)
         return topology
 
     def _topology_to_dict(self, topology: Graph) -> dict:
@@ -337,5 +351,5 @@ def scan(
         Formatted scan results
     """
     format_enum = OutputFormat(output_format.lower())
-    scanner = Tesseract()
+    scanner = Tessera()
     return scanner.scan(topology, format_enum, include_remediation)

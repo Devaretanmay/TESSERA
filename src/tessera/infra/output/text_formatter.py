@@ -65,17 +65,13 @@ class TextFormatter(OutputFormatter):
 
     def _format_summary(self, findings: list[dict]) -> str:
         """Format findings summary."""
-        by_sev = {"critical": 0, "high": 0, "medium": 0, "low": 0, "info": 0}
-        for f in findings:
-            sev = f.get("severity", "info").lower()
-            if sev in by_sev:
-                by_sev[sev] += 1
+        by_sev = self._count_by_severity(findings)
 
         lines = [f"{self.BOLD}Summary:{self.RESET}"]
 
         severity_order = ["critical", "high", "medium", "low", "info"]
         for sev in severity_order:
-            count = by_sev[sev]
+            count = by_sev.get(sev, 0)
             if count > 0:
                 color = self.SEVERITY_COLORS.get(sev, "")
                 lines.append(f"  {color}{sev.upper()}: {count}{self.RESET}")

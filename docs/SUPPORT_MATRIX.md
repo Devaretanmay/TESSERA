@@ -15,7 +15,7 @@
 
 - Stable in this release line:
   - `tessera scan`, `topology`, `list-rules`, `explain`, `version`
-  - `Tesseract`, `scan()`, `scan_to_dict()`, `OutputFormat`
+  - `Tessera`, `scan()`, `scan_to_dict()`, `OutputFormat`
   - CFPE rule IDs
 - JSON output keys are treated as versioned public interface.
 - `core.detection.patterns` remains as a compatibility facade while canonical detection lives in `core.detection.rules`.

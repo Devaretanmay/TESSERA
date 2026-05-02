@@ -1,0 +1,59 @@
+# TESSERA Lab - Memory Poisoning Attack (CFPE-0002)
+# Scenario: User input poisons conversation memory
+
+system: ai_agent_memory_poison
+version: 1.0
+
+nodes:
+  user_input:
+    id: user_input
+    type: user
+    trust_boundary: external
+  
+  chat_llm:
+    id: chat_llm
+    type: llm
+    trust_boundary: internal
+  
+  conversation_history:
+    id: conversation_history
+    type: memory_store
+    trust_boundary: internal
+  
+  vector_db:
+    id: vector_db
+    type: memory_store
+    trust_boundary: internal
+  
+  rag_corpus:
+    id: rag_corpus
+    type: rag_corpus
+    trust_boundary: internal
+
+edges:
+  - from: user_input
+    to: chat_llm
+    flow: api
+    trust_boundary: external
+  
+  # VULNERABLE: User input goes to memory
+  - from: chat_llm
+    to: conversation_history
+    flow: read_write
+    trust_boundary: internal
+  
+  - from: chat_llm
+    to: vector_db
+    flow: read_write
+    trust_boundary: internal
+  
+  # Memory feeds back into context
+  - from: conversation_history
+    to: chat_llm
+    flow: retrieval
+    trust_boundary: internal
+  
+  - from: vector_db
+    to: rag_corpus
+    flow: retrieval
+    trust_boundary: internal

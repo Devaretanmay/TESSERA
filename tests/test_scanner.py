@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 import pytest
+from unittest.mock import MagicMock
 
 from tessera.core.topology.models import DataFlow, Edge, Graph, Node, TrustBoundary
-from tessera.engine.scanner import OutputFormat, Tesseract
+from tessera.core.topology.loader import Loader
+from tessera.engine.scanner import OutputFormat, Tessera
+from tessera.infra.output.base import OutputFormatter
 
 
 def _sample_graph() -> Graph:
@@ -25,7 +28,7 @@ def _sample_graph() -> Graph:
 
 
 def test_scan_without_remediation_strips_remediation_content():
-    scanner = Tesseract()
+    scanner = Tessera()
     output = scanner.scan(_sample_graph(), OutputFormat.JSON, include_remediation=False)
 
     assert isinstance(output, dict)
@@ -34,14 +37,14 @@ def test_scan_without_remediation_strips_remediation_content():
 
 
 def test_scan_to_dict_rejects_non_dict_formats():
-    scanner = Tesseract()
+    scanner = Tessera()
 
     with pytest.raises(ValueError, match="dict-producing output format"):
         scanner.scan_to_dict(_sample_graph(), output_format=OutputFormat.TEXT)
 
 
 def test_cfpe_0002_only_flags_memory_write_targets():
-    scanner = Tesseract()
+    scanner = Tessera()
     graph = Graph(
         system="memory-and-db",
         nodes={
@@ -74,3 +77,26 @@ def test_cfpe_0002_only_flags_memory_write_targets():
 
     assert len(cfpe_0002_findings) == 1
     assert cfpe_0002_findings[0]["edges"] == ["llm->memory"]
+
+
+def test_custom_loader_injected():
+    mock_loader = MagicMock(spec=Loader)
+    mock_loader.load.return_value = _sample_graph()
+
+    scanner = Tessera(loader=mock_loader)
+    scanner.scan("fake/path.yaml", OutputFormat.TEXT)
+
+    mock_loader.load.assert_called_once_with("fake/path.yaml")
+
+
+def test_custom_formatters_injected():
+    mock_formatter = MagicMock(spec=OutputFormatter)
+    mock_formatter.format.return_value = "custom output"
+    mock_formatter.format_name.return_value = "custom"
+
+    scanner = Tessera(
+        formatters={OutputFormat.JSON: mock_formatter, OutputFormat.TEXT: mock_formatter}
+    )
+    scanner.scan(_sample_graph(), OutputFormat.JSON)
+
+    mock_formatter.format.assert_called_once()

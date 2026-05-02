@@ -61,10 +61,10 @@ tessera explain CFPE-0001
 ### Python API
 
 ```python
-from tessera import Tesseract, OutputFormat
+from tessera import Tessera, OutputFormat
 
 # Simple usage
-scanner = Tesseract()
+scanner = Tessera()
 result = scanner.scan("my_agent.yaml", OutputFormat.TEXT)
 
 # JSON output
@@ -248,7 +248,7 @@ src/tessera/
 │   ├── topology/            # Graph models (Graph, Node, Edge)
 │   ├── detection/            # CFPE rules (10 patterns)
 │   └── findings/             # Finding models
-├── engine/                   # Scanner engine (Tesseract)
+├── engine/                   # Scanner engine (Tessera)
 ├── infra/
 │   ├── output/              # Formatters (JSON, SARIF, Text, HTML)
 │   ├── llm/                 # LLM providers (OpenAI, Anthropic, Ollama)

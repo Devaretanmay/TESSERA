@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "tessera-security"
-version = "2.0.0"
+version = "2.0.1"
 description = "AI Security Scanner for Compound Attack Chain Detection"
 readme = "README.md"
 requires-python = ">=3.10"

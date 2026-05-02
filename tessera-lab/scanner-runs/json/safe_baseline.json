@@ -1,0 +1,47 @@
+{
+  "tessera_version": "2.0.0",
+  "scan": {
+    "system": "ai_agent_safe",
+    "version": 1.0,
+    "scan_time_ms": 0.056,
+    "graph": {
+      "nodes": 4,
+      "edges": 4
+    }
+  },
+  "findings": [
+    {
+      "id": "CFPE-0004",
+      "severity": "high",
+      "category": "trust_boundary_bypass",
+      "description": "Untrusted data flows to chat_llm",
+      "edges": [
+        "user_input->chat_llm"
+      ],
+      "indicators": [
+        "trust_crossing"
+      ],
+      "remediation": {
+        "summary": "Implement trust boundary validation and data sanitization",
+        "how_to_fix": "1. Define clear trust boundaries\n2. Validate data at each boundary\n3. Implement sanitization functions\n4. Add firewall rules for cross-boundary flows",
+        "references": [
+          "OWASP LLM04",
+          "CWE-20"
+        ]
+      }
+    }
+  ],
+  "summary": {
+    "total": 1,
+    "by_severity": {
+      "critical": 0,
+      "high": 1,
+      "medium": 0,
+      "low": 0,
+      "info": 0
+    },
+    "by_category": {
+      "trust_boundary_bypass": 1
+    }
+  }
+}

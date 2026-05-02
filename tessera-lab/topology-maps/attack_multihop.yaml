@@ -1,0 +1,126 @@
+# TESSERA Lab - Multi-hop Attack Chain (CFPE-0005)
+# Scenario: Long chain from user input to database
+
+system: ai_agent_multihop_attack
+version: 1.0
+
+nodes:
+  user_input:
+    id: user_input
+    type: user
+    trust_boundary: external
+  
+  web_api:
+    id: web_api
+    type: api
+    trust_boundary: external
+  
+  chat_llm:
+    id: chat_llm
+    type: llm
+    trust_boundary: internal
+  
+  rag_corpus:
+    id: rag_corpus
+    type: rag_corpus
+    trust_boundary: internal
+  
+  search_tool:
+    id: search_tool
+    type: tool
+    trust_boundary: internal
+  
+  database:
+    id: database
+    type: database
+    trust_boundary: internal
+  
+  payment_api:
+    id: payment_api
+    type: external_service
+    trust_boundary: external
+  
+  conversation_history:
+    id: conversation_history
+    type: memory_store
+    trust_boundary: internal
+
+edges:
+  # Chain 1: user -> web_api -> llm -> database
+  - from: user_input
+    to: web_api
+    flow: api
+    trust_boundary: external
+  
+  - from: web_api
+    to: chat_llm
+    flow: api
+    trust_boundary: external
+  
+  - from: chat_llm
+    to: database
+    flow: read_write
+    trust_boundary: internal
+  
+  # Chain 2: user -> web_api -> llm -> payment_api
+  - from: user_input
+    to: web_api
+    flow: api
+    trust_boundary: external
+  
+  - from: web_api
+    to: chat_llm
+    flow: api
+    trust_boundary: external
+  
+  - from: chat_llm
+    to: payment_api
+    flow: api
+    trust_boundary: external
+  
+  # Chain 3: user -> web_api -> llm -> search_tool -> database
+  - from: user_input
+    to: web_api
+    flow: api
+    trust_boundary: external
+  
+  - from: web_api
+    to: chat_llm
+    flow: api
+    trust_boundary: external
+  
+  - from: chat_llm
+    to: rag_corpus
+    flow: retrieval
+    trust_boundary: internal
+  
+  - from: rag_corpus
+    to: search_tool
+    flow: tool_call
+    trust_boundary: internal
+  
+  - from: search_tool
+    to: database
+    flow: read_write
+    trust_boundary: internal
+  
+  # Chain 4: user -> web_api -> llm -> memory -> llm
+  - from: user_input
+    to: web_api
+    flow: api
+    trust_boundary: external
+  
+  - from: web_api
+    to: chat_llm
+    flow: api
+    trust_boundary: external
+  
+  - from: chat_llm
+    to: conversation_history
+    flow: read_write
+    trust_boundary: internal
+  
+  - from: conversation_history
+    to: chat_llm
+    flow: retrieval
+    trust_boundary: internal

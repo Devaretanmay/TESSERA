@@ -1,0 +1,66 @@
+# TESSERA Lab - RAG to Tool Attack (CFPE-0001)
+# Scenario: Malicious document in RAG causes tool execution
+
+system: ai_agent_rag_tool_attack
+version: 1.0
+
+nodes:
+  user_input:
+    id: user_input
+    type: user
+    trust_boundary: external
+  
+  chat_llm:
+    id: chat_llm
+    type: llm
+    trust_boundary: internal
+  
+  rag_corpus:
+    id: rag_corpus
+    type: rag_corpus
+    trust_boundary: internal
+    # NOTE: Contains malicious injected content
+  
+  search_tool:
+    id: search_tool
+    type: tool
+    trust_boundary: internal
+  
+  http_tool:
+    id: http_tool
+    type: tool
+    trust_boundary: internal
+
+edges:
+  - from: user_input
+    to: chat_llm
+    flow: api
+    trust_boundary: external
+  
+  # VULNERABLE: RAG feeds context to LLM
+  - from: chat_llm
+    to: rag_corpus
+    flow: retrieval
+    trust_boundary: internal
+  
+  - from: rag_corpus
+    to: chat_llm
+    flow: retrieval
+    trust_boundary: internal
+  
+  # VULNERABLE: RAG-influenced LLM calls tool
+  - from: chat_llm
+    to: search_tool
+    flow: tool_call
+    trust_boundary: internal
+  
+  - from: chat_llm
+    to: http_tool
+    flow: tool_call
+    trust_boundary: internal
+  
+  # RAG can also influence tools directly
+  - from: rag_corpus
+    to: http_tool
+    flow: tool_call
+    trust_boundary: internal

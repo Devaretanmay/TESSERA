@@ -1,0 +1,70 @@
+{
+  "topology": "safe_baseline",
+  "risk_score": 1.47,
+  "risk_level": "info",
+  "attack_paths": [
+    {
+      "path": "database -> chat_llm",
+      "chain_length": 2,
+      "boundary_crossings": 1,
+      "risk_factors": [
+        "boundary_crossing",
+        "high_value_target"
+      ],
+      "score": 3.2,
+      "level": "low"
+    },
+    {
+      "path": "database -> chat_llm -> rag_corpus",
+      "chain_length": 3,
+      "boundary_crossings": 1,
+      "risk_factors": [
+        "boundary_crossing",
+        "high_value_target"
+      ],
+      "score": 3.2,
+      "level": "low"
+    },
+    {
+      "path": "user_input -> chat_llm",
+      "chain_length": 2,
+      "boundary_crossings": 1,
+      "risk_factors": [
+        "boundary_crossing"
+      ],
+      "score": 1.2,
+      "level": "info"
+    },
+    {
+      "path": "user_input -> chat_llm -> rag_corpus",
+      "chain_length": 3,
+      "boundary_crossings": 1,
+      "risk_factors": [
+        "boundary_crossing"
+      ],
+      "score": 1.2,
+      "level": "info"
+    },
+    {
+      "path": "chat_llm -> rag_corpus",
+      "chain_length": 2,
+      "boundary_crossings": 0,
+      "risk_factors": [],
+      "score": 0.0,
+      "level": "info"
+    },
+    {
+      "path": "rag_corpus -> chat_llm",
+      "chain_length": 2,
+      "boundary_crossings": 0,
+      "risk_factors": [],
+      "score": 0.0,
+      "level": "info"
+    }
+  ],
+  "critical_chains": 0,
+  "boundary_violations": 2,
+  "recommendations": [
+    "Add validation at 2 trust boundary crossing(s)"
+  ]
+}

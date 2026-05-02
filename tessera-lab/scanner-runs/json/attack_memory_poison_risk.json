@@ -1,0 +1,112 @@
+{
+  "topology": "attack_memory_poison",
+  "risk_score": 0.48,
+  "risk_level": "info",
+  "attack_paths": [
+    {
+      "path": "user_input -> chat_llm",
+      "chain_length": 2,
+      "boundary_crossings": 1,
+      "risk_factors": [
+        "boundary_crossing"
+      ],
+      "score": 1.2,
+      "level": "info"
+    },
+    {
+      "path": "user_input -> chat_llm -> conversation_history",
+      "chain_length": 3,
+      "boundary_crossings": 1,
+      "risk_factors": [
+        "boundary_crossing"
+      ],
+      "score": 1.2,
+      "level": "info"
+    },
+    {
+      "path": "user_input -> chat_llm -> vector_db",
+      "chain_length": 3,
+      "boundary_crossings": 1,
+      "risk_factors": [
+        "boundary_crossing"
+      ],
+      "score": 1.2,
+      "level": "info"
+    },
+    {
+      "path": "user_input -> chat_llm -> vector_db -> rag_corpus",
+      "chain_length": 4,
+      "boundary_crossings": 1,
+      "risk_factors": [
+        "long_chain",
+        "boundary_crossing"
+      ],
+      "score": 1.2,
+      "level": "info"
+    },
+    {
+      "path": "chat_llm -> conversation_history",
+      "chain_length": 2,
+      "boundary_crossings": 0,
+      "risk_factors": [],
+      "score": 0.0,
+      "level": "info"
+    },
+    {
+      "path": "chat_llm -> vector_db",
+      "chain_length": 2,
+      "boundary_crossings": 0,
+      "risk_factors": [],
+      "score": 0.0,
+      "level": "info"
+    },
+    {
+      "path": "chat_llm -> vector_db -> rag_corpus",
+      "chain_length": 3,
+      "boundary_crossings": 0,
+      "risk_factors": [],
+      "score": 0.0,
+      "level": "info"
+    },
+    {
+      "path": "conversation_history -> chat_llm",
+      "chain_length": 2,
+      "boundary_crossings": 0,
+      "risk_factors": [],
+      "score": 0.0,
+      "level": "info"
+    },
+    {
+      "path": "conversation_history -> chat_llm -> vector_db",
+      "chain_length": 3,
+      "boundary_crossings": 0,
+      "risk_factors": [],
+      "score": 0.0,
+      "level": "info"
+    },
+    {
+      "path": "conversation_history -> chat_llm -> vector_db -> rag_corpus",
+      "chain_length": 4,
+      "boundary_crossings": 0,
+      "risk_factors": [
+        "long_chain"
+      ],
+      "score": 0.0,
+      "level": "info"
+    },
+    {
+      "path": "vector_db -> rag_corpus",
+      "chain_length": 2,
+      "boundary_crossings": 0,
+      "risk_factors": [],
+      "score": 0.0,
+      "level": "info"
+    }
+  ],
+  "critical_chains": 0,
+  "boundary_violations": 4,
+  "recommendations": [
+    "Add validation at 4 trust boundary crossing(s)",
+    "Break long attack chains with validation points"
+  ]
+}

@@ -17,7 +17,7 @@ from fastapi.responses import JSONResponse, PlainTextResponse
 from pydantic import BaseModel, Field
 
 from tessera.core.topology.loader import Loader, ValidationError
-from tessera.engine.scanner import OutputFormat, Tesseract
+from tessera.engine.scanner import OutputFormat, Tessera
 from tessera.infra.api.auth import APIPrincipal, verify_bearer_token
 from tessera.infra.api.config import get_api_settings
 from tessera.infra.api.errors import (
@@ -70,8 +70,24 @@ def _error_payload(code: str, message: str) -> dict[str, Any]:
     return {"error": {"code": code, "message": message}}
 
 
-async def _run_scan(req: ScanRequest, scan_id: str, principal: APIPrincipal) -> ScanResponse:
-    loader = Loader()
+def get_loader() -> Loader:
+    """Dependency for Loader injection."""
+    return Loader()
+
+
+def get_scanner() -> Tessera:
+    """Dependency for Tessera injection."""
+    return Tessera()
+
+
+async def _run_scan(
+    req: ScanRequest,
+    scan_id: str,
+    principal: APIPrincipal,
+    scanner: Tessera,
+    loader: Loader,
+) -> ScanResponse:
+
     try:
         graph = loader.load_from_string(req.topology_yaml)
     except ValidationError as exc:
@@ -89,7 +105,6 @@ async def _run_scan(req: ScanRequest, scan_id: str, principal: APIPrincipal) -> 
             f"Topology exceeds edge limit ({len(graph.edges)} > {settings.max_topology_edges})"
         )
 
-    scanner = Tesseract()
     if req.llm_enabled:
         llm_ok = scanner.enable_llm({"timeout": settings.llm_timeout_seconds})
         if not llm_ok:
@@ -280,10 +295,12 @@ async def create_scan(
     req: ScanRequest,
     request: Request,
     principal: APIPrincipal = Depends(verify_bearer_token),
+    scanner: Tessera = Depends(get_scanner),
+    loader: Loader = Depends(get_loader),
 ):
     _enforce_rate_limit(principal, request)
     scan_id = f"scan_{principal.tenant_id}_{uuid4().hex[:12]}"
-    return await _run_scan(req, scan_id, principal)
+    return await _run_scan(req, scan_id, principal, scanner, loader)
 
 
 @app.get("/health/live")

@@ -1,0 +1,259 @@
+{
+  "tessera_version": "2.0.0",
+  "scan": {
+    "system": "ai_agent_base",
+    "version": 1.0,
+    "scan_time_ms": 0.127,
+    "graph": {
+      "nodes": 9,
+      "edges": 10
+    }
+  },
+  "findings": [
+    {
+      "id": "CFPE-0002",
+      "severity": "critical",
+      "category": "compound_chain",
+      "description": "Memory poisoning risk - write to persistent memory",
+      "edges": [
+        "rag_corpus->vector_store"
+      ],
+      "indicators": [
+        "memory_persist"
+      ],
+      "remediation": {
+        "summary": "Use read-only memory for RAG context",
+        "how_to_fix": "1. Use read-only memory stores for RAG context\n2. Implement memory integrity verification\n3. Separate user context from system memory\n4. Add memory signing/verification",
+        "references": [
+          "OWASP LLM03",
+          "CWE-20"
+        ]
+      }
+    },
+    {
+      "id": "CFPE-0002",
+      "severity": "critical",
+      "category": "compound_chain",
+      "description": "Memory poisoning risk - write to persistent memory",
+      "edges": [
+        "chat_llm->conversation_history"
+      ],
+      "indicators": [
+        "memory_persist"
+      ],
+      "remediation": {
+        "summary": "Use read-only memory for RAG context",
+        "how_to_fix": "1. Use read-only memory stores for RAG context\n2. Implement memory integrity verification\n3. Separate user context from system memory\n4. Add memory signing/verification",
+        "references": [
+          "OWASP LLM03",
+          "CWE-20"
+        ]
+      }
+    },
+    {
+      "id": "CFPE-0007",
+      "severity": "critical",
+      "category": "compound_chain",
+      "description": "LLM can send data to external service 'payment_api'",
+      "edges": [
+        "chat_llm->payment_api"
+      ],
+      "indicators": [
+        "data_exfiltration"
+      ],
+      "remediation": {
+        "summary": "Prevent sensitive data from being sent to external services",
+        "how_to_fix": "1. Implement output filtering for sensitive data\n2. Add data loss prevention (DLP) checks\n3. Use internal tools for sensitive operations\n4. Add audit logging for external calls\n5. Implement rate limiting on external APIs",
+        "references": [
+          "OWASP LLM06",
+          "CWE-306"
+        ]
+      }
+    },
+    {
+      "id": "CFPE-0001",
+      "severity": "high",
+      "category": "compound_chain",
+      "description": "RAG to Tool execution chain detected",
+      "edges": [
+        "chat_llm->search_tool",
+        "chat_llm->http_tool"
+      ],
+      "indicators": [
+        "rag_tool_chain"
+      ],
+      "remediation": {
+        "summary": "Validate RAG outputs before tool execution",
+        "how_to_fix": "1. Validate RAG outputs before tool execution\n2. Implement least-privilege for tool access\n3. Add output sanitization between RAG and tools\n4. Use separate privilege boundaries",
+        "references": [
+          "OWASP LLM02",
+          "CWE-20"
+        ]
+      }
+    },
+    {
+      "id": "CFPE-0004",
+      "severity": "high",
+      "category": "trust_boundary_bypass",
+      "description": "Untrusted data flows to chat_llm",
+      "edges": [
+        "api_gateway->chat_llm"
+      ],
+      "indicators": [
+        "trust_crossing"
+      ],
+      "remediation": {
+        "summary": "Implement trust boundary validation and data sanitization",
+        "how_to_fix": "1. Define clear trust boundaries\n2. Validate data at each boundary\n3. Implement sanitization functions\n4. Add firewall rules for cross-boundary flows",
+        "references": [
+          "OWASP LLM04",
+          "CWE-20"
+        ]
+      }
+    },
+    {
+      "id": "CFPE-0004",
+      "severity": "high",
+      "category": "trust_boundary_bypass",
+      "description": "Untrusted data flows to payment_api",
+      "edges": [
+        "chat_llm->payment_api"
+      ],
+      "indicators": [
+        "trust_crossing"
+      ],
+      "remediation": {
+        "summary": "Implement trust boundary validation and data sanitization",
+        "how_to_fix": "1. Define clear trust boundaries\n2. Validate data at each boundary\n3. Implement sanitization functions\n4. Add firewall rules for cross-boundary flows",
+        "references": [
+          "OWASP LLM04",
+          "CWE-20"
+        ]
+      }
+    },
+    {
+      "id": "CFPE-0005",
+      "severity": "high",
+      "category": "compound_chain",
+      "description": "Multi-hop attack chain (4 hops): user_input -> api_gateway -> chat_llm -> payment_api",
+      "edges": [
+        "user_input->api_gateway",
+        "api_gateway->chat_llm",
+        "chat_llm->payment_api"
+      ],
+      "indicators": [
+        "multi_hop_chain"
+      ],
+      "remediation": {
+        "summary": "Break long attack chains with validation points",
+        "how_to_fix": "1. Break long chains with validation points\n2. Implement multiple security layers\n3. Monitor chain interactions\n4. Add circuit breakers between hops\n5. Log and alert on multi-hop flows",
+        "references": [
+          "OWASP LLM02",
+          "MITRE ATT&CK"
+        ]
+      }
+    },
+    {
+      "id": "CFPE-0005",
+      "severity": "high",
+      "category": "compound_chain",
+      "description": "Multi-hop attack chain (4 hops): user_input -> api_gateway -> chat_llm -> conversation_history",
+      "edges": [
+        "user_input->api_gateway",
+        "api_gateway->chat_llm",
+        "chat_llm->conversation_history"
+      ],
+      "indicators": [
+        "multi_hop_chain"
+      ],
+      "remediation": {
+        "summary": "Break long attack chains with validation points",
+        "how_to_fix": "1. Break long chains with validation points\n2. Implement multiple security layers\n3. Monitor chain interactions\n4. Add circuit breakers between hops\n5. Log and alert on multi-hop flows",
+        "references": [
+          "OWASP LLM02",
+          "MITRE ATT&CK"
+        ]
+      }
+    },
+    {
+      "id": "CFPE-0005",
+      "severity": "high",
+      "category": "compound_chain",
+      "description": "Multi-hop attack chain (4 hops): user_input -> api_gateway -> chat_llm -> http_tool",
+      "edges": [
+        "user_input->api_gateway",
+        "api_gateway->chat_llm",
+        "chat_llm->http_tool"
+      ],
+      "indicators": [
+        "multi_hop_chain"
+      ],
+      "remediation": {
+        "summary": "Break long attack chains with validation points",
+        "how_to_fix": "1. Break long chains with validation points\n2. Implement multiple security layers\n3. Monitor chain interactions\n4. Add circuit breakers between hops\n5. Log and alert on multi-hop flows",
+        "references": [
+          "OWASP LLM02",
+          "MITRE ATT&CK"
+        ]
+      }
+    },
+    {
+      "id": "CFPE-0005",
+      "severity": "high",
+      "category": "compound_chain",
+      "description": "Multi-hop attack chain (4 hops): user_input -> api_gateway -> chat_llm -> search_tool",
+      "edges": [
+        "user_input->api_gateway",
+        "api_gateway->chat_llm",
+        "chat_llm->search_tool"
+      ],
+      "indicators": [
+        "multi_hop_chain"
+      ],
+      "remediation": {
+        "summary": "Break long attack chains with validation points",
+        "how_to_fix": "1. Break long chains with validation points\n2. Implement multiple security layers\n3. Monitor chain interactions\n4. Add circuit breakers between hops\n5. Log and alert on multi-hop flows",
+        "references": [
+          "OWASP LLM02",
+          "MITRE ATT&CK"
+        ]
+      }
+    },
+    {
+      "id": "CFPE-0005",
+      "severity": "high",
+      "category": "compound_chain",
+      "description": "Multi-hop attack chain (4 hops): api_gateway -> chat_llm -> rag_corpus -> vector_store",
+      "edges": [
+        "api_gateway->chat_llm",
+        "chat_llm->rag_corpus",
+        "rag_corpus->vector_store"
+      ],
+      "indicators": [
+        "multi_hop_chain"
+      ],
+      "remediation": {
+        "summary": "Break long attack chains with validation points",
+        "how_to_fix": "1. Break long chains with validation points\n2. Implement multiple security layers\n3. Monitor chain interactions\n4. Add circuit breakers between hops\n5. Log and alert on multi-hop flows",
+        "references": [
+          "OWASP LLM02",
+          "MITRE ATT&CK"
+        ]
+      }
+    }
+  ],
+  "summary": {
+    "total": 11,
+    "by_severity": {
+      "critical": 3,
+      "high": 8,
+      "medium": 0,
+      "low": 0,
+      "info": 0
+    },
+    "by_category": {
+      "compound_chain": 9,
+      "trust_boundary_bypass": 2
+    }
+  }
+}

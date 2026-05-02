@@ -6,7 +6,7 @@ from tessera.core.detection import rules
 
 
 def test_public_package_exports_stable_surface():
-    assert hasattr(tessera, "Tesseract")
+    assert hasattr(tessera, "Tessera")
     assert hasattr(tessera, "scan")
     assert hasattr(tessera, "OutputFormat")
     assert hasattr(tessera, "Finding")

@@ -9,7 +9,7 @@ import os
 import typer
 
 from tessera.core.topology.loader import ValidationError, Loader
-from tessera.engine.scanner import Tesseract, OutputFormat
+from tessera.engine.scanner import Tessera, OutputFormat
 from tessera.infra.logging_utils import configure_logging
 
 configure_logging(level=os.getenv("TESSERA_LOG_LEVEL", "WARNING"), json_logs=False)
@@ -25,7 +25,7 @@ def scan(
 ):
     """Scan a topology file for security vulnerabilities."""
     try:
-        scanner = Tesseract()
+        scanner = Tessera()
 
         # Enable LLM if requested
         if llm:
@@ -136,6 +136,32 @@ def version():
     from tessera import __version__
 
     typer.echo(f"TESSERA v{__version__}")
+
+
+@app.command()
+def risk(
+    config: Path = typer.Option(..., exists=True, help="Topology YAML file"),
+    output: Path | None = typer.Option(None, help="Output file (optional)"),
+):
+    """Assess risk and generate attack paths for a topology."""
+    from tessera.core.risk import assess_risk
+
+    try:
+        loader = Loader()
+        graph = loader.load(str(config))
+
+        assessment = assess_risk(graph, config.stem)
+
+        if output:
+            with output.open("w", encoding="utf-8") as f:
+                json.dump(assessment.to_dict(), f, indent=2)
+            typer.echo(f"Risk assessment written to {output}")
+        else:
+            typer.echo(assessment.to_explanation())
+
+    except ValidationError as e:
+        typer.echo(f"Error: {e}", err=True)
+        raise typer.Exit(1)
 
 
 if __name__ == "__main__":

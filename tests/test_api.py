@@ -141,7 +141,7 @@ def test_api_internal_failures_do_not_leak_stack_details(monkeypatch):
     def fail(*args, **kwargs):
         raise RuntimeError("boom")
 
-    monkeypatch.setattr(server.Tesseract, "build_scan_result", fail)
+    monkeypatch.setattr(server.Tessera, "build_scan_result", fail)
     response = client.post(
         "/api/v1/scans",
         json={"topology_yaml": SAFE_TOPOLOGY},

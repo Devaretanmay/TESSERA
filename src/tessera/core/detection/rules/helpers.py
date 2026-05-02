@@ -1,11 +1,10 @@
 """
 Graph analysis helpers - extracted common patterns.
-
-Cognitive Principle: DRY - Don't Repeat Yourself
-Miller's Law: Chunk related operations together
 """
 
 from __future__ import annotations
+
+from collections import deque
 
 from tessera.core.topology.models import Graph, Node, Edge, TrustBoundary, DataFlow
 from tessera.core.detection.rules.base import Category, Finding, Remediation, Severity
@@ -37,10 +36,7 @@ def get_edges_by_flow(graph: Graph, flow: DataFlow) -> list[Edge]:
 
 
 def get_untrusted_edges(graph: Graph) -> list[Edge]:
-    """Get edges crossing from untrusted to trusted boundaries.
-
-    Research: Trust boundary violations are high-risk patterns.
-    """
+    """Get edges crossing from untrusted to trusted boundaries."""
     untrusted = {TrustBoundary.EXTERNAL, TrustBoundary.USER_CONTROLLED}
     return [e for e in graph.edges if e.trust_boundary in untrusted]
 
@@ -78,35 +74,32 @@ def build_adjacency(graph: Graph) -> dict[str, list[str]]:
     return adj
 
 
+
 def find_paths_bfs(
     graph: Graph,
     start: str,
     max_depth: int = 3,
     allow_cycles: bool = False,
 ) -> list[list[str]]:
-    """Find all paths from start node up to max_depth using BFS.
-
-    Cognitive: Simple algorithm, easy to understand and debug.
-    """
+    """Find all paths from start node up to max_depth using BFS."""
     paths: list[list[str]] = []
-    stack: list[tuple[str, list[str], int]] = [(start, [start], 0)]
+    queue: deque[tuple[str, list[str], int]] = deque([(start, [start], 0)])
+    
+    # Optimize edge lookup: map from_node -> list of to_nodes
+    adj = {node_id: [] for node_id in graph.nodes}
+    for edge in graph.edges:
+        adj[edge.from_node].append(edge.to_node)
 
-    while stack:
-        node, path, depth = stack.pop()
+    while queue:
+        node, path, depth = queue.popleft()
 
         if depth >= max_depth:
             paths.append(path)
             continue
 
-        for neighbor in graph.nodes.get(node, Node(id=node, type="")).type or []:
-            neighbor_edges = [
-                e for e in graph.edges if e.from_node == node and e.to_node == neighbor
-            ]
-            if not neighbor_edges:
-                continue
-
+        for neighbor in adj.get(node, []):
             if allow_cycles or neighbor not in path:
-                stack.append((neighbor, path + [neighbor], depth + 1))
+                queue.append((neighbor, path + [neighbor], depth + 1))
 
     return paths
 
@@ -117,11 +110,13 @@ def find_all_paths(
     end: str,
     max_length: int = 4,
 ) -> list[list[str]]:
-    """Find all paths from start to end node.
-
-    Used for multi-hop attack chain detection.
-    """
+    """Find all paths from start to end node."""
     paths: list[list[str]] = []
+    
+    # Optimize edge lookup
+    adj = {node_id: [] for node_id in graph.nodes}
+    for edge in graph.edges:
+        adj[edge.from_node].append(edge.to_node)
 
     def dfs(current: str, path: list[str]) -> None:
         if len(path) > max_length:
@@ -130,9 +125,9 @@ def find_all_paths(
             paths.append(path)
             return
 
-        for edge in graph.edges:
-            if edge.from_node == current and edge.to_node not in path:
-                dfs(edge.to_node, path + [edge.to_node])
+        for neighbor in adj.get(current, []):
+            if neighbor not in path:
+                dfs(neighbor, path + [neighbor])
 
     dfs(start, [start])
     return paths
@@ -149,10 +144,7 @@ def create_finding(
     how_to_fix: str,
     references: list[str] | None = None,
 ) -> Finding:
-    """Factory function to create findings with consistent structure.
-
-    Reduces cognitive load by providing one place to change remediation format.
-    """
+    """Factory function to create findings with consistent structure."""
     return Finding(
         id=rule_id,
         severity=severity,

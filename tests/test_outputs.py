@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from tessera.core.topology.models import DataFlow, Edge, Graph, Node, TrustBoundary
-from tessera.engine.scanner import OutputFormat, Tesseract
+from tessera.engine.scanner import OutputFormat, Tessera
 
 
 def _rag_tool_graph() -> Graph:
@@ -22,7 +22,7 @@ def _rag_tool_graph() -> Graph:
 
 
 def test_text_output_keeps_multiline_remediation_indented():
-    scanner = Tesseract()
+    scanner = Tessera()
     output = scanner.scan(_rag_tool_graph(), OutputFormat.TEXT)
 
     assert "   1. Validate RAG outputs before tool execution" in output
@@ -30,7 +30,7 @@ def test_text_output_keeps_multiline_remediation_indented():
 
 
 def test_sarif_output_is_dict_with_runs():
-    scanner = Tesseract()
+    scanner = Tessera()
     output = scanner.scan(_rag_tool_graph(), OutputFormat.SARIF)
 
     assert isinstance(output, dict)
@@ -39,7 +39,7 @@ def test_sarif_output_is_dict_with_runs():
 
 
 def test_json_output_contract_contains_summary_and_findings():
-    scanner = Tesseract()
+    scanner = Tessera()
     output = scanner.scan(_rag_tool_graph(), OutputFormat.JSON)
 
     assert output["tessera_version"] == "2.0.0"

@@ -1,0 +1,52 @@
+# TESSERA Lab - Safe Baseline (No Vulnerabilities)
+# Scenario: Isolated components with proper boundaries
+
+system: ai_agent_safe
+version: 1.0
+
+nodes:
+  user_input:
+    id: user_input
+    type: user
+    trust_boundary: external
+  
+  chat_llm:
+    id: chat_llm
+    type: llm
+    trust_boundary: internal
+  
+  # Isolated RAG (read-only)
+  rag_corpus:
+    id: rag_corpus
+    type: rag_corpus
+    trust_boundary: internal
+  
+  # Internal database (not exposed)
+  database:
+    id: database
+    type: database
+    trust_boundary: privileged
+
+edges:
+  # User input is validated before reaching LLM
+  - from: user_input
+    to: chat_llm
+    flow: api
+    trust_boundary: external
+  
+  # RAG is read-only (no write edges)
+  - from: chat_llm
+    to: rag_corpus
+    flow: retrieval
+    trust_boundary: internal
+  
+  - from: rag_corpus
+    to: chat_llm
+    flow: retrieval
+    trust_boundary: internal
+  
+  # Database is isolated (no direct LLM access)
+  - from: database
+    to: chat_llm
+    flow: inference
+    trust_boundary: privileged

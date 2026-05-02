@@ -1,0 +1,273 @@
+{
+  "topology": "attack_multihop",
+  "risk_score": 6.8,
+  "risk_level": "high",
+  "attack_paths": [
+    {
+      "path": "user_input -> web_api -> chat_llm -> rag_corpus -> search_tool -> database",
+      "chain_length": 6,
+      "boundary_crossings": 1,
+      "risk_factors": [
+        "long_chain",
+        "boundary_crossing",
+        "high_value_target",
+        "tool_usage"
+      ],
+      "score": 6.8,
+      "level": "high"
+    },
+    {
+      "path": "user_input -> web_api -> chat_llm -> rag_corpus -> search_tool -> database",
+      "chain_length": 6,
+      "boundary_crossings": 1,
+      "risk_factors": [
+        "long_chain",
+        "boundary_crossing",
+        "high_value_target",
+        "tool_usage"
+      ],
+      "score": 6.8,
+      "level": "high"
+    },
+    {
+      "path": "user_input -> web_api -> chat_llm -> rag_corpus -> search_tool -> database",
+      "chain_length": 6,
+      "boundary_crossings": 1,
+      "risk_factors": [
+        "long_chain",
+        "boundary_crossing",
+        "high_value_target",
+        "tool_usage"
+      ],
+      "score": 6.8,
+      "level": "high"
+    },
+    {
+      "path": "user_input -> web_api -> chat_llm -> rag_corpus -> search_tool -> database",
+      "chain_length": 6,
+      "boundary_crossings": 1,
+      "risk_factors": [
+        "long_chain",
+        "boundary_crossing",
+        "high_value_target",
+        "tool_usage"
+      ],
+      "score": 6.8,
+      "level": "high"
+    },
+    {
+      "path": "user_input -> web_api -> chat_llm -> rag_corpus -> search_tool -> database",
+      "chain_length": 6,
+      "boundary_crossings": 1,
+      "risk_factors": [
+        "long_chain",
+        "boundary_crossing",
+        "high_value_target",
+        "tool_usage"
+      ],
+      "score": 6.8,
+      "level": "high"
+    },
+    {
+      "path": "user_input -> web_api -> chat_llm -> rag_corpus -> search_tool -> database",
+      "chain_length": 6,
+      "boundary_crossings": 1,
+      "risk_factors": [
+        "long_chain",
+        "boundary_crossing",
+        "high_value_target",
+        "tool_usage"
+      ],
+      "score": 6.8,
+      "level": "high"
+    },
+    {
+      "path": "user_input -> web_api -> chat_llm -> rag_corpus -> search_tool -> database",
+      "chain_length": 6,
+      "boundary_crossings": 1,
+      "risk_factors": [
+        "long_chain",
+        "boundary_crossing",
+        "high_value_target",
+        "tool_usage"
+      ],
+      "score": 6.8,
+      "level": "high"
+    },
+    {
+      "path": "user_input -> web_api -> chat_llm -> rag_corpus -> search_tool -> database",
+      "chain_length": 6,
+      "boundary_crossings": 1,
+      "risk_factors": [
+        "long_chain",
+        "boundary_crossing",
+        "high_value_target",
+        "tool_usage"
+      ],
+      "score": 6.8,
+      "level": "high"
+    },
+    {
+      "path": "user_input -> web_api -> chat_llm -> rag_corpus -> search_tool -> database",
+      "chain_length": 6,
+      "boundary_crossings": 1,
+      "risk_factors": [
+        "long_chain",
+        "boundary_crossing",
+        "high_value_target",
+        "tool_usage"
+      ],
+      "score": 6.8,
+      "level": "high"
+    },
+    {
+      "path": "user_input -> web_api -> chat_llm -> rag_corpus -> search_tool -> database",
+      "chain_length": 6,
+      "boundary_crossings": 1,
+      "risk_factors": [
+        "long_chain",
+        "boundary_crossing",
+        "high_value_target",
+        "tool_usage"
+      ],
+      "score": 6.8,
+      "level": "high"
+    },
+    {
+      "path": "user_input -> web_api -> chat_llm -> rag_corpus -> search_tool -> database",
+      "chain_length": 6,
+      "boundary_crossings": 1,
+      "risk_factors": [
+        "long_chain",
+        "boundary_crossing",
+        "high_value_target",
+        "tool_usage"
+      ],
+      "score": 6.8,
+      "level": "high"
+    },
+    {
+      "path": "user_input -> web_api -> chat_llm -> rag_corpus -> search_tool -> database",
+      "chain_length": 6,
+      "boundary_crossings": 1,
+      "risk_factors": [
+        "long_chain",
+        "boundary_crossing",
+        "high_value_target",
+        "tool_usage"
+      ],
+      "score": 6.8,
+      "level": "high"
+    },
+    {
+      "path": "user_input -> web_api -> chat_llm -> rag_corpus -> search_tool -> database",
+      "chain_length": 6,
+      "boundary_crossings": 1,
+      "risk_factors": [
+        "long_chain",
+        "boundary_crossing",
+        "high_value_target",
+        "tool_usage"
+      ],
+      "score": 6.8,
+      "level": "high"
+    },
+    {
+      "path": "user_input -> web_api -> chat_llm -> rag_corpus -> search_tool -> database",
+      "chain_length": 6,
+      "boundary_crossings": 1,
+      "risk_factors": [
+        "long_chain",
+        "boundary_crossing",
+        "high_value_target",
+        "tool_usage"
+      ],
+      "score": 6.8,
+      "level": "high"
+    },
+    {
+      "path": "user_input -> web_api -> chat_llm -> rag_corpus -> search_tool -> database",
+      "chain_length": 6,
+      "boundary_crossings": 1,
+      "risk_factors": [
+        "long_chain",
+        "boundary_crossing",
+        "high_value_target",
+        "tool_usage"
+      ],
+      "score": 6.8,
+      "level": "high"
+    },
+    {
+      "path": "user_input -> web_api -> chat_llm -> rag_corpus -> search_tool -> database",
+      "chain_length": 6,
+      "boundary_crossings": 1,
+      "risk_factors": [
+        "long_chain",
+        "boundary_crossing",
+        "high_value_target",
+        "tool_usage"
+      ],
+      "score": 6.8,
+      "level": "high"
+    },
+    {
+      "path": "web_api -> chat_llm -> rag_corpus -> search_tool -> database",
+      "chain_length": 5,
+      "boundary_crossings": 1,
+      "risk_factors": [
+        "long_chain",
+        "boundary_crossing",
+        "high_value_target",
+        "tool_usage"
+      ],
+      "score": 6.0,
+      "level": "high"
+    },
+    {
+      "path": "web_api -> chat_llm -> rag_corpus -> search_tool -> database",
+      "chain_length": 5,
+      "boundary_crossings": 1,
+      "risk_factors": [
+        "long_chain",
+        "boundary_crossing",
+        "high_value_target",
+        "tool_usage"
+      ],
+      "score": 6.0,
+      "level": "high"
+    },
+    {
+      "path": "web_api -> chat_llm -> rag_corpus -> search_tool -> database",
+      "chain_length": 5,
+      "boundary_crossings": 1,
+      "risk_factors": [
+        "long_chain",
+        "boundary_crossing",
+        "high_value_target",
+        "tool_usage"
+      ],
+      "score": 6.0,
+      "level": "high"
+    },
+    {
+      "path": "web_api -> chat_llm -> rag_corpus -> search_tool -> database",
+      "chain_length": 5,
+      "boundary_crossings": 1,
+      "risk_factors": [
+        "long_chain",
+        "boundary_crossing",
+        "high_value_target",
+        "tool_usage"
+      ],
+      "score": 6.0,
+      "level": "high"
+    }
+  ],
+  "critical_chains": 0,
+  "boundary_violations": 278,
+  "recommendations": [
+    "Add validation at 278 trust boundary crossing(s)",
+    "Break long attack chains with validation points"
+  ]
+}

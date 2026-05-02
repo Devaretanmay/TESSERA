@@ -12,6 +12,7 @@ from tessera.infra.llm.base import (
     RiskAssessment,
     RiskLevel,
 )
+from tessera.infra.llm.parsers import LLMResponseParser
 
 
 class OpenAIProvider(LLMProvider):
@@ -148,12 +149,9 @@ Return JSON with ids of findings that are likely FALSE POSITIVES:
 
     def _parse_assessment(self, response: str) -> RiskAssessment:
         """Parse LLM response into RiskAssessment."""
-        import json
+        data = LLMResponseParser.parse_json_with_fallback(response)
 
-        try:
-            # Try to extract JSON from response
-            data = json.loads(response)
-
+        if data:
             return RiskAssessment(
                 risk_level=self._parse_risk_level(data.get("risk_level", "low")),
                 confidence=float(data.get("confidence", 0.5)),
@@ -161,50 +159,18 @@ Return JSON with ids of findings that are likely FALSE POSITIVES:
                 findings=data.get("findings", []),
                 recommendations=data.get("recommendations", []),
             )
-        except json.JSONDecodeError:
-            # Try to find JSON in response
-            import re
 
-            match = re.search(r"\{[\s\S]*\}", response)
-            if match:
-                try:
-                    data = json.loads(match.group())
-                    return RiskAssessment(
-                        risk_level=self._parse_risk_level(data.get("risk_level", "low")),
-                        confidence=float(data.get("confidence", 0.5)),
-                        explanation=data.get("explanation", response),
-                        findings=data.get("findings", []),
-                        recommendations=data.get("recommendations", []),
-                    )
-                except (json.JSONDecodeError, ValueError, TypeError):
-                    pass
-
-            # Default to safe on parse failure
-            return RiskAssessment(
-                risk_level=RiskLevel.SAFE,
-                confidence=0.0,
-                explanation="Could not parse LLM response",
-            )
+        return RiskAssessment(
+            risk_level=RiskLevel.SAFE,
+            confidence=0.0,
+            explanation="Could not parse LLM response",
+        )
 
     def _parse_filtered_findings(self, response: str, original: list[dict]) -> list[dict]:
         """Parse filtered findings from LLM response."""
-        import json
-        import re
-
-        try:
-            data = json.loads(response)
-            fp_ids = data.get("false_positive_ids", [])
+        fp_ids = LLMResponseParser.extract_false_positive_ids(response)
+        if fp_ids:
             return [f for f in original if f.get("id") not in fp_ids]
-        except json.JSONDecodeError:
-            match = re.search(r"\{[\s\S]*\}", response)
-            if match:
-                try:
-                    data = json.loads(match.group())
-                    fp_ids = data.get("false_positive_ids", [])
-                    return [f for f in original if f.get("id") not in fp_ids]
-                except (json.JSONDecodeError, ValueError, TypeError):
-                    pass
-
         return original
 
     @staticmethod

@@ -2,6 +2,7 @@
 Base LLM provider interface and models.
 """
 
+import os
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
@@ -61,6 +62,10 @@ class LLMProvider(ABC):
             config: LLM configuration
         """
         self.config = config
+
+    def _check_env_key(self, env_var: str) -> bool:
+        """Check if environment key is available."""
+        return bool(os.environ.get(env_var))
 
     @abstractmethod
     def is_available(self) -> bool:

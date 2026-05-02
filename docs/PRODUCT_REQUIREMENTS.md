@@ -409,10 +409,10 @@ jobs:
 **Python API:**
 
 ```python
-from tessera import Tesseract
+from tessera import Tessera
 
 # Simple usage
-scanner = Tesseract()
+scanner = Tessera()
 findings = scanner.scan("topology.yaml")
 
 # With options

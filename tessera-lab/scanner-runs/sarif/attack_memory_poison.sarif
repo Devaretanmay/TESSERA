@@ -1,0 +1,328 @@
+{
+  "version": "2.1.0",
+  "$schema": "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/main/Schemata/sarif-schema-2.1.0.json",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "TESSERA",
+          "version": "2.0.0",
+          "informationUri": "https://github.com/Devaretanmay/TESSERA",
+          "rules": [
+            {
+              "id": "CFPE-0001",
+              "name": "RAG to Tool",
+              "shortDescription": {
+                "text": "RAG to Tool execution chain detected"
+              },
+              "fullDescription": {
+                "text": "Detects when an LLM can chain through RAG knowledge retrieval to execute tools, enabling potential prompt injection attacks."
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "help": {
+                "text": "Implement input validation between RAG and tool execution. Use separate privilege boundaries.",
+                "markdown": "## Remediation\n\n1. Validate RAG outputs before tool execution\n2. Implement least-privilege for tool access\n3. Add output sanitization between RAG and tools"
+              },
+              "properties": {
+                "security-severity": "8.0"
+              }
+            },
+            {
+              "id": "CFPE-0002",
+              "name": "Memory Poisoning",
+              "shortDescription": {
+                "text": "Memory poisoning risk detected"
+              },
+              "fullDescription": {
+                "text": "Detects when an LLM can write to persistent memory stores, enabling injection of malicious context."
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "help": {
+                "text": "Use read-only memory for RAG context. Implement memory signing.",
+                "markdown": "## Remediation\n\n1. Use read-only memory stores for RAG context\n2. Implement memory integrity verification\n3. Separate user context from system memory"
+              },
+              "properties": {
+                "security-severity": "9.1"
+              }
+            },
+            {
+              "id": "CFPE-0003",
+              "name": "External to Database",
+              "shortDescription": {
+                "text": "Untrusted external data direct database access"
+              },
+              "fullDescription": {
+                "text": "Detects when external/untrusted data can directly access databases without validation."
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "help": {
+                "text": "Add validation layer between external inputs and database.",
+                "markdown": "## Remediation\n\n1. Add input validation layer\n2. Use parameterized queries\n3. Implement database firewall rules"
+              },
+              "properties": {
+                "security-severity": "8.5"
+              }
+            },
+            {
+              "id": "CFPE-0004",
+              "name": "Trust Boundary Bypass",
+              "shortDescription": {
+                "text": "Untrusted data crosses trust boundary"
+              },
+              "fullDescription": {
+                "text": "Detects when data flows across trust boundaries without proper sanitization."
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "help": {
+                "text": "Implement trust boundary validation and data sanitization.",
+                "markdown": "## Remediation\n\n1. Define clear trust boundaries\n2. Validate data at each boundary\n3. Implement sanitization functions"
+              },
+              "properties": {
+                "security-severity": "7.5"
+              }
+            },
+            {
+              "id": "CFPE-0005",
+              "name": "Multi-hop Attack Chain",
+              "shortDescription": {
+                "text": "Multi-hop attack chain detected (3+ edges)"
+              },
+              "fullDescription": {
+                "text": "Detects complex attack chains that span 3 or more edges in the topology."
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "help": {
+                "text": "Analyze and break long attack chains. Implement defense in depth.",
+                "markdown": "## Remediation\n\n1. Break long chains with validation points\n2. Implement multiple security layers\n3. Monitor chain interactions"
+              },
+              "properties": {
+                "security-severity": "8.0"
+              }
+            },
+            {
+              "id": "CFPE-0006",
+              "name": "Tool to Tool Chaining",
+              "shortDescription": {
+                "text": "Tool chaining detected"
+              },
+              "fullDescription": {
+                "text": "Detects when one tool can call another, potentially escalating privileges."
+              },
+              "defaultConfiguration": {
+                "level": "note"
+              },
+              "help": {
+                "text": "Review tool permissions and implement tool isolation.",
+                "markdown": "## Remediation\n\n1. Limit tool-to-tool communication\n2. Implement tool permission model\n3. Audit tool interaction logs"
+              },
+              "properties": {
+                "security-severity": "5.0"
+              }
+            },
+            {
+              "id": "CFPE-0007",
+              "name": "Sensitive Data Exfiltration",
+              "shortDescription": {
+                "text": "LLM can send data to external service"
+              },
+              "fullDescription": {
+                "text": "Detects when LLM or agent can send sensitive data to external services."
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "help": {
+                "text": "Implement output filtering for sensitive data.",
+                "markdown": "## Remediation\n\n1. Implement DLP checks\n2. Add audit logging"
+              },
+              "properties": {
+                "security-severity": "9.5"
+              }
+            },
+            {
+              "id": "CFPE-0008",
+              "name": "RAG Context Injection",
+              "shortDescription": {
+                "text": "User input can inject into RAG context"
+              },
+              "fullDescription": {
+                "text": "Detects when user input can directly inject into RAG context without sanitization."
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "help": {
+                "text": "Sanitize user input before RAG embedding.",
+                "markdown": "## Remediation\n\n1. Sanitize input\n2. Implement context isolation"
+              },
+              "properties": {
+                "security-severity": "8.0"
+              }
+            },
+            {
+              "id": "CFPE-0009",
+              "name": "MCP Config Attack",
+              "shortDescription": {
+                "text": "MCP server vulnerability"
+              },
+              "fullDescription": {
+                "text": "Detects potential MCP configuration vulnerabilities."
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "help": {
+                "text": "Validate MCP server authenticity.",
+                "markdown": "## Remediation\n\n1. Use signed configs\n2. Implement allowlisting"
+              },
+              "properties": {
+                "security-severity": "7.5"
+              }
+            },
+            {
+              "id": "CFPE-0010",
+              "name": "Agent Skill Injection",
+              "shortDescription": {
+                "text": "External source can modify skills"
+              },
+              "fullDescription": {
+                "text": "Detects when external sources can modify agent skill definitions."
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "help": {
+                "text": "Protect skill definitions from injection.",
+                "markdown": "## Remediation\n\n1. Use read-only skills\n2. Sign skill files"
+              },
+              "properties": {
+                "security-severity": "8.0"
+              }
+            }
+          ]
+        }
+      },
+      "results": [
+        {
+          "ruleId": "CFPE-0002",
+          "level": "error",
+          "message": {
+            "text": "Memory poisoning risk - write to persistent memory",
+            "markdown": "1. Use read-only memory stores for RAG context\n2. Implement memory integrity verification\n3. Separate user context from system memory\n4. Add memory signing/verification"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "topology.yaml",
+                  "uriBaseId": "ROOT"
+                },
+                "region": {
+                  "startLine": 1,
+                  "snippet": {
+                    "text": "chat_llm->conversation_history"
+                  }
+                }
+              },
+              "message": {
+                "text": "Edge: chat_llm->conversation_history"
+              }
+            }
+          ],
+          "properties": {
+            "category": "compound_chain",
+            "indicators": [
+              "memory_persist"
+            ]
+          }
+        },
+        {
+          "ruleId": "CFPE-0002",
+          "level": "error",
+          "message": {
+            "text": "Memory poisoning risk - write to persistent memory",
+            "markdown": "1. Use read-only memory stores for RAG context\n2. Implement memory integrity verification\n3. Separate user context from system memory\n4. Add memory signing/verification"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "topology.yaml",
+                  "uriBaseId": "ROOT"
+                },
+                "region": {
+                  "startLine": 1,
+                  "snippet": {
+                    "text": "chat_llm->vector_db"
+                  }
+                }
+              },
+              "message": {
+                "text": "Edge: chat_llm->vector_db"
+              }
+            }
+          ],
+          "properties": {
+            "category": "compound_chain",
+            "indicators": [
+              "memory_persist"
+            ]
+          }
+        },
+        {
+          "ruleId": "CFPE-0004",
+          "level": "warning",
+          "message": {
+            "text": "Untrusted data flows to chat_llm",
+            "markdown": "1. Define clear trust boundaries\n2. Validate data at each boundary\n3. Implement sanitization functions\n4. Add firewall rules for cross-boundary flows"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "topology.yaml",
+                  "uriBaseId": "ROOT"
+                },
+                "region": {
+                  "startLine": 1,
+                  "snippet": {
+                    "text": "user_input->chat_llm"
+                  }
+                }
+              },
+              "message": {
+                "text": "Edge: user_input->chat_llm"
+              }
+            }
+          ],
+          "properties": {
+            "category": "trust_boundary_bypass",
+            "indicators": [
+              "trust_crossing"
+            ]
+          }
+        }
+      ],
+      "invocations": [
+        {
+          "executionSuccessful": true,
+          "startTimeUtc": "2026-04-22T11:33:49.994120+00:00",
+          "endTimeUtc": "2026-04-22T11:33:49.994350+00:00",
+          "workingDirectory": {
+            "uri": "file:///"
+          }
+        }
+      ]
+    }
+  ]
+}

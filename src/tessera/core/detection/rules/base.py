@@ -1,8 +1,5 @@
 """
 Base classes for CFPE detection rules.
-
-Single Responsibility: Define interfaces for all detection rules.
-Cognitive Principle: Clear abstraction, minimal nesting, easy to extend.
 """
 
 from __future__ import annotations
@@ -36,10 +33,7 @@ class Category(str, Enum):
 
 @dataclass
 class Remediation:
-    """Structured remediation guidance.
-
-    Reduces cognitive load by providing clear, actionable steps.
-    """
+    """Structured remediation guidance."""
 
     summary: str
     how_to_fix: str
@@ -55,10 +49,7 @@ class Remediation:
 
 @dataclass
 class Finding:
-    """A detected vulnerability with structured data.
-
-    Principle: Single Finding = one vulnerability = easy to understand.
-    """
+    """A detected vulnerability with structured data."""
 
     id: str
     severity: Severity
@@ -89,11 +80,7 @@ class Finding:
 
 
 class DetectionRule(ABC):
-    """Abstract base for all CFPE detection rules.
-
-    Single Responsibility: Each rule detects ONE pattern.
-    Open/Closed: Extend for new rules, don't modify existing.
-    """
+    """Abstract base for all CFPE detection rules."""
 
     id: str
     name: str

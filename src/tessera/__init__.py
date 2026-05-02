@@ -1,5 +1,5 @@
 # TESSERA Core Package
-__version__ = "2.0.0"
+__version__ = "2.0.1"
 
 from tessera.core.topology.models import Graph, Node, Edge, TrustBoundary, DataFlow
 from tessera.core.detection.rules import Finding, Severity as FindingSeverity, Category as FailureType
@@ -9,14 +9,20 @@ from tessera.infra.output.sarif_formatter import format_to_sarif
 from tessera.infra.output.json_formatter import format_to_json
 from tessera.infra.output.text_formatter import format_to_text
 from tessera.infra.output.html_formatter import format_to_html
-from tessera.engine.scanner import Tesseract, scan, OutputFormat
+from tessera.engine.scanner import Tessera, scan, OutputFormat
 from tessera.infra.llm import (
     LLMProvider,
     LLMConfig,
-    RiskAssessment,
+    RiskAssessment as LLMRiskAssessment,
     ProviderType,
     create_provider,
     get_available_providers,
+)
+from tessera.core.risk import (
+    RiskLevel,
+    RiskAssessment,
+    AttackPath,
+    assess_risk,
 )
 
 __all__ = [
@@ -45,13 +51,18 @@ __all__ = [
     "format_to_text",
     "format_to_html",
     # Scanner
-    "Tesseract",
+    "Tessera",
     "scan",
     "OutputFormat",
+    # Risk Engine
+    "RiskLevel",
+    "RiskAssessment",
+    "AttackPath",
+    "assess_risk",
     # LLM (optional)
     "LLMProvider",
     "LLMConfig",
-    "RiskAssessment",
+    "LLMRiskAssessment",
     "ProviderType",
     "create_provider",
     "get_available_providers",

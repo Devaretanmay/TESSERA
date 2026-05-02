@@ -1,6 +1,4 @@
-"""
-JSON output formatter for TESSERA.
-"""
+"""JSON output formatter for TESSERA."""
 
 from tessera.infra.output.base import OutputFormatter, ScanResult
 
@@ -37,23 +35,6 @@ class JsonFormatter(OutputFormatter):
                 "by_category": self._count_by_category(findings),
             },
         }
-
-    def _count_by_severity(self, findings: list[dict]) -> dict:
-        """Count findings by severity."""
-        counts = {"critical": 0, "high": 0, "medium": 0, "low": 0, "info": 0}
-        for finding in findings:
-            sev = finding.get("severity", "info").lower()
-            if sev in counts:
-                counts[sev] += 1
-        return counts
-
-    def _count_by_category(self, findings: list[dict]) -> dict:
-        """Count findings by category."""
-        counts = {}
-        for finding in findings:
-            cat = finding.get("category", "unknown")
-            counts[cat] = counts.get(cat, 0) + 1
-        return counts
 
 
 def format_to_json(

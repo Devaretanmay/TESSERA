@@ -31,8 +31,8 @@ class HtmlFormatter(OutputFormatter):
 
     def _html_header(self, result: ScanResult) -> str:
         """HTML header with styling."""
-        system = escape(result.system)
-        version = escape(result.version)
+        system = escape(str(result.system))
+        version = escape(str(result.version))
         return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -82,11 +82,7 @@ class HtmlFormatter(OutputFormatter):
 
     def _html_summary(self, findings: list[dict]) -> str:
         """HTML summary cards."""
-        by_sev = {"critical": 0, "high": 0, "medium": 0, "low": 0, "info": 0}
-        for f in findings:
-            sev = f.get("severity", "info").lower()
-            if sev in by_sev:
-                by_sev[sev] += 1
+        by_sev = self._count_by_severity(findings)
 
         return f"""
     <div class="summary">
@@ -96,15 +92,15 @@ class HtmlFormatter(OutputFormatter):
         </div>
         <div class="summary-card">
             <div class="label">Critical</div>
-            <div class="value critical">{by_sev["critical"]}</div>
+            <div class="value critical">{by_sev.get("critical", 0)}</div>
         </div>
         <div class="summary-card">
             <div class="label">High</div>
-            <div class="value high">{by_sev["high"]}</div>
+            <div class="value high">{by_sev.get("high", 0)}</div>
         </div>
         <div class="summary-card">
             <div class="label">Medium</div>
-            <div class="value medium">{by_sev["medium"]}</div>
+            <div class="value medium">{by_sev.get("medium", 0)}</div>
         </div>
         <div class="summary-card">
             <div class="label">Low</div>

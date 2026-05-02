@@ -1,0 +1,115 @@
+# TESSERA Lab - Base Topology
+# Represents a typical AI agent workflow with RAG, tools, and memory
+
+system: ai_agent_base
+version: 1.0
+
+nodes:
+  # User-facing entry point
+  user_input:
+    id: user_input
+    type: user
+    trust_boundary: external
+  
+  # API Gateway
+  api_gateway:
+    id: api_gateway
+    type: api
+    trust_boundary: external
+  
+  # Core LLM
+  chat_llm:
+    id: chat_llm
+    type: llm
+    trust_boundary: internal
+    provider: anthropic
+  
+  # Knowledge retrieval
+  rag_corpus:
+    id: rag_corpus
+    type: rag_corpus
+    trust_boundary: internal
+  
+  vector_store:
+    id: vector_store
+    type: memory_store
+    trust_boundary: internal
+  
+  # Tools
+  search_tool:
+    id: search_tool
+    type: tool
+    trust_boundary: internal
+  
+  http_tool:
+    id: http_tool
+    type: tool
+    trust_boundary: internal
+  
+  # Memory
+  conversation_history:
+    id: conversation_history
+    type: memory_store
+    trust_boundary: internal
+  
+  # External services
+  payment_api:
+    id: payment_api
+    type: external_service
+    trust_boundary: external
+
+edges:
+  # User to system
+  - from: user_input
+    to: api_gateway
+    flow: api
+    trust_boundary: external
+  
+  - from: api_gateway
+    to: chat_llm
+    flow: api
+    trust_boundary: external
+  
+  # RAG retrieval chain
+  - from: chat_llm
+    to: rag_corpus
+    flow: retrieval
+    trust_boundary: internal
+  
+  - from: rag_corpus
+    to: chat_llm
+    flow: retrieval
+    trust_boundary: internal
+  
+  - from: rag_corpus
+    to: vector_store
+    flow: read_write
+    trust_boundary: internal
+  
+  # Tool calls
+  - from: chat_llm
+    to: search_tool
+    flow: tool_call
+    trust_boundary: internal
+  
+  - from: chat_llm
+    to: http_tool
+    flow: tool_call
+    trust_boundary: internal
+  
+  # Memory
+  - from: chat_llm
+    to: conversation_history
+    flow: read_write
+    trust_boundary: internal
+  
+  - from: conversation_history
+    to: chat_llm
+    flow: retrieval
+    trust_boundary: internal
+  
+  # External calls
+  - from: chat_llm
+    to: payment_api
+    flow: api
+    trust_boundary: external

@@ -13,7 +13,7 @@ capabilities to AI assistants.
 from typing import Any
 from dataclasses import dataclass
 
-from tessera.engine.scanner import Tesseract, OutputFormat
+from tessera.engine.scanner import Tessera, OutputFormat
 
 
 @dataclass
@@ -51,7 +51,7 @@ class ScanTool:
         graph = loader.load_from_string(topology_yaml)
 
         # Scan
-        scanner = Tesseract()
+        scanner = Tessera()
         format_enum = OutputFormat(format.lower())
         result = scanner.scan(graph, format_enum)
 

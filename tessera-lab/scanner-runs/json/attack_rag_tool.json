@@ -1,0 +1,92 @@
+{
+  "tessera_version": "2.0.0",
+  "scan": {
+    "system": "ai_agent_rag_tool_attack",
+    "version": 1.0,
+    "scan_time_ms": 0.079,
+    "graph": {
+      "nodes": 5,
+      "edges": 6
+    }
+  },
+  "findings": [
+    {
+      "id": "CFPE-0001",
+      "severity": "high",
+      "category": "compound_chain",
+      "description": "RAG to Tool execution chain detected",
+      "edges": [
+        "chat_llm->search_tool",
+        "chat_llm->http_tool",
+        "rag_corpus->http_tool"
+      ],
+      "indicators": [
+        "rag_tool_chain"
+      ],
+      "remediation": {
+        "summary": "Validate RAG outputs before tool execution",
+        "how_to_fix": "1. Validate RAG outputs before tool execution\n2. Implement least-privilege for tool access\n3. Add output sanitization between RAG and tools\n4. Use separate privilege boundaries",
+        "references": [
+          "OWASP LLM02",
+          "CWE-20"
+        ]
+      }
+    },
+    {
+      "id": "CFPE-0004",
+      "severity": "high",
+      "category": "trust_boundary_bypass",
+      "description": "Untrusted data flows to chat_llm",
+      "edges": [
+        "user_input->chat_llm"
+      ],
+      "indicators": [
+        "trust_crossing"
+      ],
+      "remediation": {
+        "summary": "Implement trust boundary validation and data sanitization",
+        "how_to_fix": "1. Define clear trust boundaries\n2. Validate data at each boundary\n3. Implement sanitization functions\n4. Add firewall rules for cross-boundary flows",
+        "references": [
+          "OWASP LLM04",
+          "CWE-20"
+        ]
+      }
+    },
+    {
+      "id": "CFPE-0005",
+      "severity": "high",
+      "category": "compound_chain",
+      "description": "Multi-hop attack chain (4 hops): user_input -> chat_llm -> rag_corpus -> http_tool",
+      "edges": [
+        "user_input->chat_llm",
+        "chat_llm->rag_corpus",
+        "rag_corpus->http_tool"
+      ],
+      "indicators": [
+        "multi_hop_chain"
+      ],
+      "remediation": {
+        "summary": "Break long attack chains with validation points",
+        "how_to_fix": "1. Break long chains with validation points\n2. Implement multiple security layers\n3. Monitor chain interactions\n4. Add circuit breakers between hops\n5. Log and alert on multi-hop flows",
+        "references": [
+          "OWASP LLM02",
+          "MITRE ATT&CK"
+        ]
+      }
+    }
+  ],
+  "summary": {
+    "total": 3,
+    "by_severity": {
+      "critical": 0,
+      "high": 3,
+      "medium": 0,
+      "low": 0,
+      "info": 0
+    },
+    "by_category": {
+      "compound_chain": 2,
+      "trust_boundary_bypass": 1
+    }
+  }
+}
